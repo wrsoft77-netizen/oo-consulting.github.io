@@ -242,7 +242,7 @@
                         <tr>
                             <td><strong>GPU</strong></td>
                             <td>(현재 GPU)</td>
-                            <td>NVIDIA RTX 6000(24GB VRAM) or NVIDIA GPU</td>
+                            <td>NVIDIA RTX PRO 4500 Blackwell</td>
                         </tr>
                         <tr>
                             <td><strong>네트워크</strong></td>
@@ -392,7 +392,8 @@ sudo dnf install -y nvidia-container-toolkit
 sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker</code>
                 </div>
-                <p class="command-desc">설치 후 <code>nvidia-smi</code> 명령으로 RTX 6000 정보가 표시되어야 합니다.</p>
+                <p class="command-desc">설치 후 <code>nvidia-smi</code> 명령으로 NVIDIA RTX PRO 4500 Blackwell 정보가 표시되어야 합니다.
+                </p>
             </div>
 
             <div class="step-item">
@@ -495,7 +496,7 @@ mkdir -p data/postgres data/models</code>
 EMBED_MODEL_ALLOW_DOWNLOADS=1
 INGEST_ALLOW_DOWNLOADS=1
 
-# RTX 6000 최적화 (VRAM 24GB 활용)
+# NVIDIA RTX PRO 4500 Blackwell 최적화 (VRAM 24GB 활용)
 OLLAMA_NUM_CTX=4096
 INGEST_BATCH_SIZE=8
 
@@ -690,7 +691,7 @@ docker exec -it rag-postgres psql -U rag_user -d rag \
             </div>
             <div class="footer-bottom">
                 <p class="footer-copyright">
-                    © 2026 RAG System. Last Updated: 2026-02-06
+                    © 2026 RAG System. Last Updated: 2026-02-10
                 </p>
             </div>
         </div>
