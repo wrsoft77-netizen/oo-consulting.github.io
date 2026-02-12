@@ -237,7 +237,7 @@
                         <tr>
                             <td><strong>서버 IP</strong></td>
                             <td>localhost</td>
-                            <td>192.168.2.11</td>
+                            <td>192.168.2.14</td>
                         </tr>
                         <tr>
                             <td><strong>GPU</strong></td>
@@ -276,12 +276,12 @@
                     <tbody>
                         <tr>
                             <td><strong>일반 사용자</strong></td>
-                            <td><code>http://192.168.2.11:8080/index1.html</code></td>
+                            <td><code>http://192.168.2.14:8080/index1.html</code></td>
                             <td>사용자 전용 인터페이스</td>
                         </tr>
                         <tr>
                             <td><strong>운영 관리자</strong></td>
-                            <td><code>http://192.168.2.11:8080</code></td>
+                            <td><code>http://192.168.2.14:8080</code></td>
                             <td>관리자 전용 인터페이스</td>
                         </tr>
                     </tbody>
@@ -545,7 +545,7 @@ docker compose logs -f</code>
                     <label class="checklist-item"><input type="checkbox"> <code>curl http://localhost:8000/health</code>
                         응답 확인</label>
                     <label class="checklist-item"><input type="checkbox"> 브라우저
-                        <code>http://192.168.2.11:8080/index1.html</code> 접속 성공</label>
+                        <code>http://192.168.2.14:8080/index1.html</code> 접속 성공</label>
                     <label class="checklist-item"><input type="checkbox"> 초기 데이터 Ingest 로그 확인 (자동 시작)</label>
                 </div>
             </div>
@@ -612,7 +612,7 @@ fi</code>
                 <div class="architecture-diagram">
                     <div class="code-block" data-lang="bash">
                         <code># 수동 Ingest 요청
-curl -X POST http://192.168.2.11:8000/ingest/trigger
+curl -X POST http://192.168.2.14:8000/ingest/trigger
 
 # 적재 데이터 수 확인
 docker exec -it rag-postgres psql -U rag_user -d rag \
@@ -691,7 +691,7 @@ docker exec -it rag-postgres psql -U rag_user -d rag \
             </div>
             <div class="footer-bottom">
                 <p class="footer-copyright">
-                    © 2026 RAG System. Last Updated: 2026-02-10
+                    © 2026 RAG System. Last Updated: 2026-02-12
                 </p>
             </div>
         </div>
