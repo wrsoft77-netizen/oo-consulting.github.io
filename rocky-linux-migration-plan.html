@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="RAG 시스템 Rocky Linux 9.7 마이그레이션 상세 계획서 - 환경 설정, Docker 배포, 유지보수 가이드">
+    <meta name="description" content="RAG 시스템 Rocky Linux 9.6 마이그레이션 상세 계획서 - 환경 설정, Docker 배포, 유지보수 가이드">
     <meta name="keywords" content="Rocky Linux, Migration, Docker, GPU, Ollama, RAG">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -191,11 +191,11 @@
             <div class="hero-content">
                 <span class="hero-badge">Migration Guide</span>
                 <h1 class="hero-title">
-                    Rocky Linux 9.7<br>
+                    Rocky Linux 9.6<br>
                     <span class="gradient-text">서버 구축 계획서</span>
                 </h1>
                 <p class="hero-description">
-                    RAG 시스템을 Windows 환경에서 Rocky Linux 9.7 (Blue Onyx) 엔터프라이즈 서버로 마이그레이션하기 위한
+                    RAG 시스템을 Windows 환경에서 Rocky Linux 9.6 (Blue Onyx) 엔터프라이즈 서버로 마이그레이션하기 위한
                     상세 구축 절차, 환경 설정, 트러블슈팅 가이드입니다.
                 </p>
                 <div class="hero-buttons">
@@ -232,7 +232,7 @@
                         <tr>
                             <td><strong>운영체제</strong></td>
                             <td>Windows 10</td>
-                            <td>Rocky Linux 9.7 (Blue Onyx)</td>
+                            <td>Rocky Linux 9.6 (Blue Onyx)</td>
                         </tr>
                         <tr>
                             <td><strong>서버 IP</strong></td>
@@ -338,7 +338,7 @@
             <div class="section-header">
                 <span class="section-label">Step 1</span>
                 <h2 class="section-title">서버 기본 설정</h2>
-                <p class="section-description">Rocky Linux 9.7 OS 설정 및 Docker/NVIDIA 드라이버 설치</p>
+                <p class="section-description">Rocky Linux 9.6 OS 설정 및 Docker/NVIDIA 드라이버 설치</p>
             </div>
 
             <div class="step-item" style="margin-bottom: 3rem;">
@@ -669,7 +669,7 @@ docker exec -it rag-postgres psql -U rag_user -d rag \
                     </div>
                     <p class="footer-desc">
                         FastAPI, LlamaIndex, PostgreSQL + pgvector 기반의 엔터프라이즈급 RAG 플랫폼.<br>
-                        Rocky Linux 9.7 마이그레이션 가이드.
+                        Rocky Linux 9.6 마이그레이션 가이드.
                     </p>
                 </div>
                 <div class="footer-nav">
