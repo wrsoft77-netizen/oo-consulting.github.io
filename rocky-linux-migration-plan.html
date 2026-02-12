@@ -342,10 +342,13 @@
             </div>
 
             <div class="step-item" style="margin-bottom: 3rem;">
-                <h3 class="step-title">1.1 시스템 업데이트</h3>
+                <h3 class="step-title">1.1 시스템 업데이트 및 저장소 설정</h3>
                 <div class="code-block" data-lang="bash">
                     <code># 시스템 업데이트
 sudo dnf update -y
+
+# CRB(CodeReady Builder) 활성화 (의존성 해결용)
+sudo dnf config-manager --set-enabled crb
 
 # EPEL 저장소 활성화
 sudo dnf install -y epel-release
