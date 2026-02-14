@@ -625,24 +625,23 @@
                             <td>벡터 DB</td>
                             <td><span style="color: var(--color-success); font-weight: bold;">PostgreSQL +
                                     pgvector</span></td>
-                            <td>(완료)</td>
+                            <td><span style="color: var(--color-success);">✓ 완료</span></td>
                             <td>PostgreSQL (파티셔닝)</td>
                             <td>PostgreSQL 클러스터</td>
                         </tr>
                         <tr>
                             <td>LLM</td>
                             <td><span style="color: var(--color-success); font-weight: bold;">Ollama 0.14.2 (qwen2.5:3b Q4_K_M)</span></td>
-                            <td>(완료)</td>
+                            <td><span style="color: var(--color-success);">✓ 완료</span></td>
                             <td>Ollama + vLLM</td>
                             <td>분산 추론 클러스터</td>
                         </tr>
                         <tr>
-                            <td>정형 데이터 분석</td>
-                            <td>미적용</td>
-                            <td>요구사항/스키마 설계</td>
-                            <td><span style="color: var(--color-warning); font-weight: bold;">LLM Text-to-SQL (Phase
-                                    5)</span></td>
-                            <td>SQL Guardrail + 차트/리포트 자동화</td>
+                            <td>검색 기술</td>
+                            <td><span style="color: var(--color-success); font-weight: bold;">하이브리드 검색</span></td>
+                            <td><span style="color: var(--color-success);">✓ 완료</span></td>
+                            <td>쿼리 확장 + 재순위화</td>
+                            <td>GraphRAG + Agentic RAG</td>
                         </tr>
                         <tr>
                             <td>캐싱</td>
@@ -652,11 +651,25 @@
                             <td>Redis + Semantic Cache</td>
                         </tr>
                         <tr>
-                            <td>검색 기술</td>
-                            <td><span style="color: var(--color-success); font-weight: bold;">하이브리드 검색</span></td>
-                            <td>(완료)</td>
-                            <td>쿼리 확장 + 재순위화</td>
-                            <td>GraphRAG + Agentic</td>
+                            <td>문서 처리</td>
+                            <td>PDF / TXT</td>
+                            <td>PDF / TXT</td>
+                            <td><span style="color: var(--color-warning); font-weight: bold;">PaddleOCR + HWP (Phase 4)</span></td>
+                            <td>실시간 인덱싱 + 메타데이터 확장</td>
+                        </tr>
+                        <tr>
+                            <td>정형 데이터 분석</td>
+                            <td>미적용</td>
+                            <td>미적용</td>
+                            <td>요구사항 / 스키마 설계</td>
+                            <td><span style="color: var(--color-info); font-weight: bold;">LLM Text-to-SQL (Phase 5)</span> → 차트 자동화</td>
+                        </tr>
+                        <tr>
+                            <td>사용자 경험</td>
+                            <td>기본 UI</td>
+                            <td>기본 UI</td>
+                            <td><span style="color: var(--color-warning); font-weight: bold;">SSE 스트리밍 (Phase 3)</span></td>
+                            <td>멀티턴 대화 + 대시보드 (Phase 6)</td>
                         </tr>
                         <tr>
                             <td>모니터링</td>
@@ -669,8 +682,8 @@
                             <td>보안</td>
                             <td>없음</td>
                             <td>기본 인증</td>
-                            <td>RBAC</td>
-                            <td>SSO + 감사 로깅</td>
+                            <td>SQL 보안 (SELECT-only)</td>
+                            <td>RBAC + SSO + 감사 로깅 (Phase 7)</td>
                         </tr>
                     </tbody>
                 </table>
@@ -763,8 +776,8 @@
                         <tr>
                             <td>Phase 6</td>
                             <td>중간</td>
-                            <td>a 개발자, c 개발자</td>
-                            <td>FileWatcher 인덱싱 → 메타데이터 확장 → OCR/표 추출</td>
+                            <td>b 개발자, a 개발자</td>
+                            <td>멀티턴 대화 · 고급 검색 필터 · 시각화 대시보드</td>
                             <td>중기</td>
                         </tr>
                         <tr>
