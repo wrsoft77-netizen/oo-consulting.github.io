@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LLM Text-to-SQL 아키텍처 설계 - 자연어 질문을 SQL로 변환하여 정형 데이터를 조회하는 RAG 하이브리드 시스템">
+    <meta name="keywords" content="Text-to-SQL, RAG, AI, SQL, LLM, 자연어 쿼리, PostgreSQL, 하이브리드 검색">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>RAG 시스템 | Text-to-SQL 아키텍처</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css?v=20260214">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+</head>
+
+<body>
+    <!-- AI Pattern Background Canvas -->
+    <div class="ai-canvas-container">
+        <canvas id="ai-pattern-canvas"></canvas>
+    </div>
+    <div class="circuit-overlay"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="architecture.html" class="logo">
+                <span class="logo-icon">🧠</span>
+                RAG System
+            </a>
+            <ul class="nav-menu" id="navMenu">
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link dropdown-trigger">제안서</a>
+                    <div class="dropdown-menu">
+                        <a href="index.html#overview" class="dropdown-link">프로젝트 개요</a>
+                        <a href="index.html#benefits" class="dropdown-link">기대 효과</a>
+                        <a href="index.html#main-features" class="dropdown-link">주요 기능 상세</a>
+                        <a href="index.html#ingest-features" class="dropdown-link">인제스트 기능</a>
+                        <a href="index.html#ui-features" class="dropdown-link">운영 화면 (UI)</a>
+                        <a href="index.html#deployment" class="dropdown-link">배포 및 운용</a>
+                        <a href="index.html#operation" class="dropdown-link">운영 프로세스</a>
+                        <a href="index.html#quick-start" class="dropdown-link">빠른 PoC 실행</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="architecture.html" class="nav-link dropdown-trigger">아키텍처</a>
+                    <div class="dropdown-menu">
+                        <a href="architecture.html#features" class="dropdown-link">핵심 기능</a>
+                        <a href="architecture.html#architecture" class="dropdown-link">시스템 아키텍처</a>
+                        <a href="architecture.html#tech-stack" class="dropdown-link">기술 스택</a>
+                        <a href="architecture.html#data-flow" class="dropdown-link">데이터 흐름</a>
+                        <a href="architecture.html#api" class="dropdown-link">API</a>
+                        <a href="architecture.html#formats" class="dropdown-link">지원 파일 형식</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="tobe_proposal.html" class="nav-link dropdown-trigger active">고도화 모델</a>
+                    <div class="dropdown-menu">
+                        <a href="tobe_proposal.html#phase1" class="dropdown-link">Phase 1: PostgreSQL 마이그레이션</a>
+                        <a href="tobe_proposal.html#phase2" class="dropdown-link">Phase 2: 하이브리드 검색</a>
+                        <a href="tobe_proposal.html#phase3" class="dropdown-link">Phase 3: LLM 성능 최적화</a>
+                        <a href="tobe_proposal.html#phase4" class="dropdown-link">Phase 4: 데이터 파이프라인</a>
+                        <a href="texttoSQL.html" class="dropdown-link" style="color: var(--color-accent-primary);">Phase 5: Text-to-SQL</a>
+                        <a href="tobe_proposal.html#phase5" class="dropdown-link">Phase 6: 사용자 경험 개선</a>
+                        <a href="tobe_proposal.html#phase6" class="dropdown-link">Phase 7: 엔터프라이즈 & 고급 RAG</a>
+                        <a href="tobe_proposal.html#roadmap" class="dropdown-link">Phase 8: 기술 스택 로드맵</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="rocky-linux-migration-plan.html" class="nav-link dropdown-trigger">서버구축</a>
+                    <div class="dropdown-menu">
+                        <a href="rocky-linux-migration-plan.html#env-info" class="dropdown-link">환경 정보</a>
+                        <a href="rocky-linux-migration-plan.html#flowchart" class="dropdown-link">작업 흐름도</a>
+                        <a href="rocky-linux-migration-plan.html#step1" class="dropdown-link">Step 1: 서버 기본 설정</a>
+                        <a href="rocky-linux-migration-plan.html#step2" class="dropdown-link">Step 2: 소스 코드 전송</a>
+                        <a href="rocky-linux-migration-plan.html#step3" class="dropdown-link">Step 3: 환경 변수 설정</a>
+                        <a href="rocky-linux-migration-plan.html#step4" class="dropdown-link">Step 4: 실행 및 검증</a>
+                        <a href="rocky-linux-migration-plan.html#troubleshooting" class="dropdown-link">트러블슈팅</a>
+                    </div>
+                </li>
+                <li><a href="index.html#contact" class="nav-link nav-cta">도입 문의</a></li>
+            </ul>
+            <div class="menu-toggle" id="menuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="container">
+            <div class="hero-content">
+                <span class="hero-badge">
+                    Phase 5 · Text-to-SQL
+                </span>
+                <h1 class="hero-title">
+                    LLM Text-to-SQL<br>
+                    <span class="gradient-text">아키텍처 설계</span>
+                </h1>
+                <p class="hero-description">
+                    사용자가 자연어(한국어)로 질문하면 LLM이 SQL SELECT 쿼리를 자동 생성하여
+                    구조화된 데이터베이스를 직접 조회하고, 결과를 자연어로 요약하는 하이브리드 RAG+SQL 시스템입니다.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#architecture" class="btn btn-primary">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        아키텍처 보기
+                    </a>
+                    <a href="#roadmap" class="btn btn-secondary">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        구현 로드맵
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Overview Section -->
+    <section class="section" id="overview">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Overview</span>
+                <h2 class="section-title">RAG와 Text-to-SQL의 역할 비교</h2>
+                <p class="section-description">
+                    기존 RAG(비정형 문서 검색)와 Text-to-SQL(정형 데이터 조회)을 결합한 하이브리드 방식으로,
+                    질문 유형에 따라 최적의 경로를 자동 선택합니다.
+                </p>
+            </div>
+
+            <div class="table-container" style="margin-bottom: var(--spacing-3xl);">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>구분</th>
+                            <th>RAG (기존)</th>
+                            <th>Text-to-SQL (신규)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>대상</strong></td>
+                            <td>비정형 문서 (PDF, DOCX 등)</td>
+                            <td>정형 데이터 (DB 테이블)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>검색 방식</strong></td>
+                            <td>벡터 유사도 + 키워드</td>
+                            <td>SQL 쿼리 생성 → 실행</td>
+                        </tr>
+                        <tr>
+                            <td><strong>응답</strong></td>
+                            <td>문서 기반 설명</td>
+                            <td>데이터 조회 결과 + 요약</td>
+                        </tr>
+                        <tr>
+                            <td><strong>예시</strong></td>
+                            <td><code>"청년내일채움공제 가입 조건은?"</code></td>
+                            <td><code>"이번 달 신규 가입자 수는?"</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Integration Modes -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); text-align: center;">
+                <span class="text-gradient">Query Router</span> — 3가지 분기 경로
+            </h3>
+            <div class="features-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="card" style="border-color: rgba(59, 130, 246, 0.3);">
+                    <div class="card-icon" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">📄</div>
+                    <h3 class="card-title">RAG 경로</h3>
+                    <p class="card-description">
+                        개념/절차/설명 질문<br>
+                        → 기존 문서 검색 파이프라인<br>
+                        <span style="color: var(--color-text-muted); font-size: 0.85rem;">키워드: 설명, 방법, 이유, 절차, 가이드</span>
+                    </p>
+                </div>
+                <div class="card" style="border-color: rgba(6, 182, 212, 0.3);">
+                    <div class="card-icon" style="background: rgba(6, 182, 212, 0.2); color: #06b6d4;">🔢</div>
+                    <h3 class="card-title">SQL 경로</h3>
+                    <p class="card-description">
+                        데이터 조회/집계 질문<br>
+                        → Text-to-SQL 파이프라인<br>
+                        <span style="color: var(--color-text-muted); font-size: 0.85rem;">키워드: 몇 건, 합계, 평균, 목록, 조회</span>
+                    </p>
+                </div>
+                <div class="card" style="border-color: rgba(168, 85, 247, 0.3);">
+                    <div class="card-icon" style="background: rgba(168, 85, 247, 0.2); color: #a855f7;">🔀</div>
+                    <h3 class="card-title">Hybrid 경로</h3>
+                    <p class="card-description">
+                        데이터 + 설명 모두 필요<br>
+                        → 양쪽 결과 통합 (SQL 우선)<br>
+                        <span style="color: var(--color-text-muted); font-size: 0.85rem;">키워드: 분석, 추이, 비교 + 조회</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section class="section" id="architecture">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Architecture</span>
+                <h2 class="section-title">통합 아키텍처</h2>
+                <p class="section-description">
+                    Query Router가 질문 의도를 분류하고, 각 파이프라인이 독립적으로 동작한 후 Context Merger에서 결과를 통합합니다.
+                </p>
+            </div>
+
+            <!-- Main Architecture Flow -->
+            <div class="architecture-diagram" style="margin-bottom: var(--spacing-3xl); padding: var(--spacing-xl);">
+                <div class="layer-title" style="margin-bottom: var(--spacing-lg); font-size: 1rem;">
+                    <span>🏗️</span> 전체 흐름도
+                </div>
+                <div class="code-block" data-lang="Flow" style="font-size: 0.8rem; line-height: 1.6;">
+<code>                        ┌──────────────┐
+                        │  사용자 질문  │
+                        └──────┬───────┘
+                               │
+                        ┌──────▼───────┐
+                        │ Query Router │  (app/query_router.py)
+                        │ 의도 분류     │
+                        └──┬───┬───┬───┘
+                     "rag" │   │   │ "sql"
+                           │   │   │
+                    ┌──────▼┐  │  ┌▼───────────┐
+                    │  RAG  │  │  │ Text-to-SQL │
+                    │Pipeline│  │  │  Pipeline   │
+                    │(기존)  │  │  │  (신규)     │
+                    └──────┬┘  │  └┬────────────┘
+                           │   │   │
+                           │ "hybrid"
+                           │   │   │
+                    ┌──────▼───▼───▼──────┐
+                    │   Context Merger     │
+                    │ (SQL결과 + 문서검색)  │
+                    │ ※ 충돌 시 SQL 우선    │
+                    └──────────┬───────────┘
+                               │
+                        ┌──────▼───────┐
+                        │  Ollama LLM  │  → 자연어 응답 생성
+                        └──────┬───────┘
+                               │
+                        ┌──────▼───────┐
+                        │   Response   │  답변 + 인용 + SQL결과
+                        └──────────────┘</code>
+                </div>
+            </div>
+
+            <!-- Text-to-SQL Pipeline Detail -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); text-align: center;">
+                Text-to-SQL 파이프라인 상세
+            </h3>
+            <div class="flow-container" style="flex-direction: column; gap: var(--spacing-md); align-items: center;">
+                <div class="flow-step" style="flex-direction: column; gap: var(--spacing-sm); width: 100%; max-width: 500px;">
+                    <div class="flow-box" style="width: 100%;">
+                        <div class="flow-box-icon">📋</div>
+                        <div class="flow-box-title">SchemaMetadataManager</div>
+                        <div class="flow-box-desc">질문 관련 테이블만 선별하여 DDL + 샘플 데이터 로드</div>
+                    </div>
+                    <div class="flow-arrow">▼</div>
+                    <div class="flow-box" style="width: 100%;">
+                        <div class="flow-box-icon">🤖</div>
+                        <div class="flow-box-title">SQLGenerator</div>
+                        <div class="flow-box-desc">LLM에 (질문 + 스키마 + Few-shot) 전달 → SQL 생성</div>
+                    </div>
+                    <div class="flow-arrow">▼</div>
+                    <div class="flow-box" style="width: 100%;">
+                        <div class="flow-box-icon">🛡️</div>
+                        <div class="flow-box-title">SQLValidator</div>
+                        <div class="flow-box-desc">sqlparse AST 분석, 단일 SELECT만 허용, 차단 패턴 검사</div>
+                    </div>
+                    <div class="flow-arrow" style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                        ▼ <span style="font-size: 0.75rem; color: var(--color-warning);">실패 시 → 재시도 (최대 2회, 의미 보존 검증)</span>
+                    </div>
+                    <div class="flow-box" style="width: 100%;">
+                        <div class="flow-box-icon">💰</div>
+                        <div class="flow-box-title">CostEstimator</div>
+                        <div class="flow-box-desc">EXPLAIN 비용 상한 검사 (운영: 필수 / 개발: 선택)</div>
+                    </div>
+                    <div class="flow-arrow">▼</div>
+                    <div class="flow-box" style="width: 100%;">
+                        <div class="flow-box-icon">⚡</div>
+                        <div class="flow-box-title">SQLExecutor</div>
+                        <div class="flow-box-desc">읽기전용, timeout 5초, 최대 1000행, 페이지네이션</div>
+                    </div>
+                    <div class="flow-arrow">▼</div>
+                    <div class="flow-box" style="width: 100%; border-color: var(--color-accent-primary);">
+                        <div class="flow-box-icon">📊</div>
+                        <div class="flow-box-title">ResultFormatter</div>
+                        <div class="flow-box-desc">마크다운 테이블 + 자연어 요약 + PII 마스킹</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Components Section -->
+    <section class="section" id="components">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Components</span>
+                <h2 class="section-title">신규 컴포넌트 명세</h2>
+                <p class="section-description">
+                    3개의 신규 파일로 구성되며, 기존 코드 패턴(pgvector_store.py, rag_orchestrator.py)을 따릅니다.
+                </p>
+            </div>
+
+            <!-- Query Router -->
+            <div style="margin-bottom: var(--spacing-3xl);">
+                <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                    <span class="text-gradient">📡</span> app/query_router.py — 질문 의도 분류
+                </h3>
+                <div class="code-block" data-lang="Python" style="margin-bottom: var(--spacing-lg);">
+<code>classify_intent(question: str) -> Literal["rag", "sql", "hybrid"]</code>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>분류</th>
+                                <th>키워드 예시</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong style="color: var(--color-accent-primary);">SQL</strong></td>
+                                <td>몇 건, 총합, 합계, 평균, 개수, 목록, 리스트, 조회, 정렬, 최대, 최소, 데이터</td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color: #3b82f6;">RAG</strong></td>
+                                <td>설명, 방법, 이유, 차이점, 절차, 가이드, 주의사항</td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color: #a855f7;">Hybrid</strong></td>
+                                <td>분석, 추이, "비교하고 조회", "설명하면서 조회"</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Text-to-SQL Engine -->
+            <div style="margin-bottom: var(--spacing-3xl);">
+                <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                    <span class="text-gradient">⚙️</span> app/text_to_sql.py — 핵심 엔진
+                </h3>
+                <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
+                    <div class="card">
+                        <div class="card-icon">📋</div>
+                        <h3 class="card-title">SchemaMetadataManager</h3>
+                        <p class="card-description">
+                            질문 관련 테이블만 선별하여 DDL + 샘플 데이터 반환 (스키마 최소 노출 원칙).
+                            한국어 동의어 매핑, 스키마 동기화 검사, 샘플 데이터 비식별화 지원.
+                        </p>
+                        <div style="margin-top: var(--spacing-md);">
+                            <code>get_schema_context()</code><br>
+                            <code>check_schema_sync()</code><br>
+                            <code>refresh_cache()</code>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🤖</div>
+                        <h3 class="card-title">SQLGenerator</h3>
+                        <p class="card-description">
+                            Ollama LLM을 호출하여 자연어 → SQL 변환.
+                            에러 보정 시 <code>retry_context</code>에 이전 에러 정보를 포함하여 재생성.
+                        </p>
+                        <div style="margin-top: var(--spacing-md);">
+                            <code>generate_sql(question, schema_context, few_shot, retry_context)</code>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">🛡️</div>
+                        <h3 class="card-title">SQLValidator</h3>
+                        <p class="card-description">
+                            sqlparse AST 분석 기반 검증. 단일 SELECT만 허용, 차단 키워드, 테이블 허용목록(주 통제),
+                            서브쿼리 깊이 제한(2단계), 함수 허용목록, PII 컬럼 보호.
+                        </p>
+                        <div style="margin-top: var(--spacing-md);">
+                            <code>validate(sql) -> ValidationResult</code>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">💰</div>
+                        <h3 class="card-title">CostEstimator</h3>
+                        <p class="card-description">
+                            <code>EXPLAIN (FORMAT JSON)</code>으로 실행 전 비용 상한/풀스캔 위험 검사.
+                            운영: 필수 적용, 개발: 선택적.
+                        </p>
+                        <div style="margin-top: var(--spacing-md);">
+                            <code>check_cost(sql) -> CostCheckResult</code>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">⚡</div>
+                        <h3 class="card-title">SQLExecutor</h3>
+                        <p class="card-description">
+                            읽기전용 커넥션 (<code>sql_reader</code> 역할), <code>READ ONLY</code>,
+                            timeout 5초, 최대 1000행. 동시성 제어 세마포어 적용.
+                        </p>
+                        <div style="margin-top: var(--spacing-md);">
+                            <code>execute(sql, offset, limit) -> SQLExecutionResult</code>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">📊</div>
+                        <h3 class="card-title">ResultFormatter</h3>
+                        <p class="card-description">
+                            SQL 결과를 마크다운 테이블로 변환, 자연어 요약 생성.
+                            PII 마스킹 후처리 + 불확실성 고지 자동 첨부.
+                        </p>
+                        <div style="margin-top: var(--spacing-md);">
+                            <code>format_standalone_response()</code><br>
+                            <code>format_for_llm_context()</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SQL Store -->
+            <div>
+                <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                    <span class="text-gradient">🗄️</span> app/sql_store.py — DB 연결 관리
+                </h3>
+                <div class="info-card" style="max-width: 700px;">
+                    <div class="info-icon blue">🔗</div>
+                    <div class="info-content">
+                        <h4>pgvector_store.py 패턴 준수</h4>
+                        <p><code>SQLStoreConfig</code> + <code>get_readonly_connection()</code> + <code>ensure_sql_schema()</code> 구조.
+                            기존 PostgresConfig 패턴과 동일한 환경변수 기반 설정.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Database Design Section -->
+    <section class="section" id="database">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Database</span>
+                <h2 class="section-title">데이터베이스 설계</h2>
+                <p class="section-description">
+                    시스템 메타데이터 테이블 3개와 샘플 비즈니스 테이블 4개로 구성됩니다.
+                </p>
+            </div>
+
+            <!-- System Tables -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                <span class="text-gradient">🗃️</span> 신규 시스템 테이블
+            </h3>
+            <div class="features-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: var(--spacing-3xl);">
+                <div class="card">
+                    <div class="card-icon" style="background: rgba(6, 182, 212, 0.2); color: #06b6d4;">📖</div>
+                    <h3 class="card-title">sql_schema_catalog</h3>
+                    <p class="card-description">
+                        LLM 프롬프트에 주입할 테이블/컬럼의 한국어 설명, PII 여부, 마스킹 유형, 동의어 정보를 관리합니다.
+                    </p>
+                    <div style="margin-top: var(--spacing-md); font-size: 0.85rem; color: var(--color-text-muted);">
+                        주요 컬럼: <code>is_pii</code>, <code>pii_mask_type</code>, <code>synonyms</code>, <code>sample_values</code>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">📝</div>
+                    <h3 class="card-title">sql_few_shot_examples</h3>
+                    <p class="card-description">
+                        SQL 생성 정확도 향상을 위한 Few-shot 예제 (한국어 질문 → 정답 SQL 쌍).
+                        난이도별 분류 및 사용 횟수 추적.
+                    </p>
+                    <div style="margin-top: var(--spacing-md); font-size: 0.85rem; color: var(--color-text-muted);">
+                        주요 컬럼: <code>question</code>, <code>sql_query</code>, <code>difficulty</code>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">📜</div>
+                    <h3 class="card-title">sql_query_log</h3>
+                    <p class="card-description">
+                        모든 SQL 생성/실행 이력의 감사 로그.
+                        요청자, 생성된 SQL, 검증 결과, 비용, 실행 시간, 에러 코드 기록.
+                    </p>
+                    <div style="margin-top: var(--spacing-md); font-size: 0.85rem; color: var(--color-text-muted);">
+                        주요 컬럼: <code>request_id</code>, <code>user_id</code>, <code>cost_estimate</code>, <code>error_code</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sample Business Tables -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                <span class="text-gradient">📦</span> 샘플 비즈니스 테이블
+            </h3>
+            <div class="table-container" style="margin-bottom: var(--spacing-3xl);">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>테이블명</th>
+                            <th>설명</th>
+                            <th>주요 컬럼</th>
+                            <th>PII 컬럼</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>subscribers</code></td>
+                            <td>가입자 정보</td>
+                            <td>subscriber_id, company_name, subscription_date, program_type, status, monthly_contribution</td>
+                            <td><code>name</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>payment_history</code></td>
+                            <td>납부 이력</td>
+                            <td>payment_id, subscriber_id, payment_date, payment_month, amount, payment_status</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td><code>consultation_log</code></td>
+                            <td>상담 이력</td>
+                            <td>consultation_id, subscriber_id, consultation_date, channel, category, resolved</td>
+                            <td><code>counselor_name</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>program_products</code></td>
+                            <td>프로그램 상품</td>
+                            <td>product_id, program_name, monthly_amount_min/max, duration_months, government_match_ratio</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- DB Role -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                <span class="text-gradient">🔐</span> 읽기전용 DB 역할
+            </h3>
+            <div class="info-card" style="margin-bottom: var(--spacing-lg);">
+                <div class="info-icon orange">🔑</div>
+                <div class="info-content">
+                    <h4>접근 통제 원칙</h4>
+                    <p>테이블 접근 차단의 <strong>주 통제 수단은 애플리케이션 레벨 SQLValidator의 허용목록</strong>이며,
+                       DB 역할 권한(<code>sql_reader</code>)은 <strong>보조 방어</strong>로 작용합니다.
+                       PostgreSQL 버전별로 시스템 카탈로그 REVOKE 동작이 다를 수 있으므로, DB 권한에만 의존하지 않습니다.</p>
+                </div>
+            </div>
+            <div class="code-block" data-lang="SQL">
+<code><span class="comment">-- 읽기전용 역할 생성</span>
+<span class="keyword">CREATE ROLE</span> sql_reader <span class="keyword">WITH LOGIN PASSWORD</span> <span class="string">'reader_secret'</span>;
+<span class="keyword">GRANT</span> CONNECT <span class="keyword">ON DATABASE</span> rag <span class="keyword">TO</span> sql_reader;
+<span class="keyword">GRANT</span> USAGE <span class="keyword">ON SCHEMA</span> public <span class="keyword">TO</span> sql_reader;
+
+<span class="comment">-- 비즈니스 테이블에만 SELECT 권한 부여</span>
+<span class="keyword">GRANT SELECT ON</span> subscribers, payment_history, consultation_log, program_products <span class="keyword">TO</span> sql_reader;
+
+<span class="comment">-- RAG 내부 테이블 접근 차단 (보조 방어)</span>
+<span class="keyword">REVOKE ALL ON</span> document_chunks, ingest_history, reocr_queue <span class="keyword">FROM</span> sql_reader;</code>
+            </div>
+        </div>
+    </section>
+
+    <!-- Security Section -->
+    <section class="section" id="security">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Security</span>
+                <h2 class="section-title">보안 아키텍처</h2>
+                <p class="section-description">
+                    API 접근부터 감사 로그까지 7단계 방어 체계로 안전한 SQL 실행 환경을 보장합니다.
+                </p>
+            </div>
+
+            <!-- 7-Layer Defense -->
+            <div class="architecture-diagram" style="margin-bottom: var(--spacing-3xl);">
+                <div class="layer-title" style="margin-bottom: var(--spacing-lg); font-size: 1rem;">
+                    <span>🛡️</span> 7단계 방어 체계
+                </div>
+                <div class="layer" style="border-left: 3px solid #ef4444;">
+                    <div class="layer-title"><span>1️⃣</span> API 접근 제어</div>
+                    <div class="layer-content">
+                        <span class="layer-item">RBAC 기반 엔드포인트별 권한 검사</span>
+                        <span class="layer-item highlight">sql:read / sql:execute 역할 분리</span>
+                    </div>
+                </div>
+                <div class="layer" style="border-left: 3px solid #f59e0b;">
+                    <div class="layer-title"><span>2️⃣</span> 입력 검증</div>
+                    <div class="layer-content">
+                        <span class="layer-item">Pydantic 모델 + 요청 크기 제한</span>
+                    </div>
+                </div>
+                <div class="layer" style="border-left: 3px solid #eab308;">
+                    <div class="layer-title"><span>3️⃣</span> 쿼리 라우팅</div>
+                    <div class="layer-content">
+                        <span class="layer-item">SQL 분류된 질문만 SQL 파이프라인 진입</span>
+                    </div>
+                </div>
+                <div class="layer" style="border-left: 3px solid #10b981;">
+                    <div class="layer-title"><span>4️⃣</span> SQL 검증 (주 통제)</div>
+                    <div class="layer-content">
+                        <span class="layer-item highlight">sqlparse AST 분석</span>
+                        <span class="layer-item highlight">테이블 허용목록</span>
+                        <span class="layer-item">함수 허용목록</span>
+                        <span class="layer-item">PII 컬럼 보호</span>
+                    </div>
+                </div>
+                <div class="layer" style="border-left: 3px solid #06b6d4;">
+                    <div class="layer-title"><span>5️⃣</span> 비용 검증</div>
+                    <div class="layer-content">
+                        <span class="layer-item">EXPLAIN 비용 상한</span>
+                        <span class="layer-item">풀스캔 감지</span>
+                    </div>
+                </div>
+                <div class="layer" style="border-left: 3px solid #3b82f6;">
+                    <div class="layer-title"><span>6️⃣</span> 실행 샌드박스</div>
+                    <div class="layer-content">
+                        <span class="layer-item">sql_reader 역할 (보조 방어)</span>
+                        <span class="layer-item">READ ONLY</span>
+                        <span class="layer-item">timeout 5초</span>
+                        <span class="layer-item">행 제한 1000</span>
+                    </div>
+                </div>
+                <div class="layer" style="border-left: 3px solid #8b5cf6;">
+                    <div class="layer-title"><span>7️⃣</span> 감사 + 알림</div>
+                    <div class="layer-content">
+                        <span class="layer-item">sql_query_log 기록</span>
+                        <span class="layer-item">이상행위 탐지</span>
+                        <span class="layer-item">반복 위반 차단</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RBAC Table -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                <span class="text-gradient">👤</span> API 접근 제어 (RBAC)
+            </h3>
+            <div class="table-container" style="margin-bottom: var(--spacing-3xl);">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>엔드포인트</th>
+                            <th>메서드</th>
+                            <th>최소 권한</th>
+                            <th>설명</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>/sql/schema</code></td>
+                            <td><span class="method-badge get">GET</span></td>
+                            <td><code>sql:read</code></td>
+                            <td>스키마 조회 (읽기 전용)</td>
+                        </tr>
+                        <tr>
+                            <td><code>/sql/schema/{table}</code></td>
+                            <td><span class="method-badge get">GET</span></td>
+                            <td><code>sql:read</code></td>
+                            <td>테이블 상세 조회</td>
+                        </tr>
+                        <tr>
+                            <td><code>/sql/query</code></td>
+                            <td><span class="method-badge post">POST</span></td>
+                            <td><code>sql:execute</code></td>
+                            <td>SQL 생성 + 실행</td>
+                        </tr>
+                        <tr>
+                            <td><code>/sql/validate</code></td>
+                            <td><span class="method-badge post">POST</span></td>
+                            <td><code>sql:read</code></td>
+                            <td>SQL 검증만 (실행 없음)</td>
+                        </tr>
+                        <tr>
+                            <td><code>/rag/query</code> <span style="font-size: 0.8rem; color: var(--color-text-muted);">(queryMode=sql)</span></td>
+                            <td><span class="method-badge post">POST</span></td>
+                            <td><code>sql:execute</code></td>
+                            <td>RAG 통합 SQL 조회</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PII Protection -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                <span class="text-gradient">🔒</span> PII 보호 정책
+            </h3>
+            <div class="features-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: var(--spacing-3xl);">
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>조회 유형</th>
+                                <th>처리 방식</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>SELECT name FROM ...</code></td>
+                                <td>차단 또는 마스킹 자동 래핑</td>
+                            </tr>
+                            <tr>
+                                <td><code>SELECT COUNT(*) GROUP BY name</code></td>
+                                <td>집계만 허용</td>
+                            </tr>
+                            <tr>
+                                <td><code>WHERE name = '김철수'</code></td>
+                                <td>조건 허용, 결과에서 마스킹</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>마스킹 유형</th>
+                                <th>원본</th>
+                                <th>결과</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>name</code></td>
+                                <td>김철수</td>
+                                <td>김OO</td>
+                            </tr>
+                            <tr>
+                                <td><code>phone</code></td>
+                                <td>010-1234-5678</td>
+                                <td>010-****-5678</td>
+                            </tr>
+                            <tr>
+                                <td><code>email</code></td>
+                                <td>user@example.com</td>
+                                <td>u***@example.com</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Attack Vectors -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                <span class="text-gradient">⚔️</span> 공격 벡터별 대응
+            </h3>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>공격</th>
+                            <th>대응</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>LLM이 DELETE/DROP 생성</td>
+                            <td>sqlparse 구문 타입 검사 + DB 역할에서 이중 차단</td>
+                        </tr>
+                        <tr>
+                            <td>세미콜론 다중 구문</td>
+                            <td>sqlparse로 statement 분리, 2개 이상이면 거부</td>
+                        </tr>
+                        <tr>
+                            <td>주석 기반 우회</td>
+                            <td>sqlparse 토큰 분석으로 주석 제거 후 재파싱</td>
+                        </tr>
+                        <tr>
+                            <td>UNION으로 시스템 테이블 조회</td>
+                            <td>테이블 허용목록(주 통제)에서 차단 + UNION 패턴 검사</td>
+                        </tr>
+                        <tr>
+                            <td>고비용 쿼리 (DoS)</td>
+                            <td>EXPLAIN 비용 상한 + timeout 5초 + 행 제한</td>
+                        </tr>
+                        <tr>
+                            <td>PII 컬럼 alias 우회</td>
+                            <td>결과 반환 전 PII 마스킹 후처리 (원본 컬럼 추적)</td>
+                        </tr>
+                        <tr>
+                            <td>Hybrid 모드 컨텍스트 오염</td>
+                            <td>RAG 컨텍스트와 SQL 생성 프롬프트를 분리된 LLM 호출로 격리</td>
+                        </tr>
+                        <tr>
+                            <td>반복 위반 질의</td>
+                            <td>동일 user_id에서 연속 검증 실패 시 로그 경고 + 임시 차단</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Failure Handling Section -->
+    <section class="section" id="failure">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Error Handling</span>
+                <h2 class="section-title">실패 처리 및 응답 정책</h2>
+                <p class="section-description">
+                    에러 코드 체계, 대체 응답 전략, 재시도 시 의미 보존 검증으로 안정적인 사용자 경험을 보장합니다.
+                </p>
+            </div>
+
+            <!-- Error Codes -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                <span class="text-gradient">🚨</span> 에러 코드 체계
+            </h3>
+            <div class="table-container" style="margin-bottom: var(--spacing-3xl);">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>에러 코드</th>
+                            <th>HTTP</th>
+                            <th>설명</th>
+                            <th>사용자 메시지</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>SQL_VALIDATION_ERROR</code></td>
+                            <td>422</td>
+                            <td>SQL 검증 실패</td>
+                            <td style="font-size: 0.85rem;">질문을 SQL로 변환했으나 안전 검증에 실패했습니다.</td>
+                        </tr>
+                        <tr>
+                            <td><code>SQL_EXECUTION_ERROR</code></td>
+                            <td>500</td>
+                            <td>SQL 실행 오류</td>
+                            <td style="font-size: 0.85rem;">SQL 실행 중 오류가 발생했습니다.</td>
+                        </tr>
+                        <tr>
+                            <td><code>SQL_TIMEOUT_ERROR</code></td>
+                            <td>504</td>
+                            <td>타임아웃 (5초 초과)</td>
+                            <td style="font-size: 0.85rem;">조회 시간이 초과되었습니다.</td>
+                        </tr>
+                        <tr>
+                            <td><code>SQL_COST_EXCEEDED</code></td>
+                            <td>422</td>
+                            <td>비용 상한 초과</td>
+                            <td style="font-size: 0.85rem;">쿼리 비용이 높아 실행이 제한되었습니다.</td>
+                        </tr>
+                        <tr>
+                            <td><code>SQL_PERMISSION_ERROR</code></td>
+                            <td>403</td>
+                            <td>권한 부족</td>
+                            <td style="font-size: 0.85rem;">해당 데이터에 대한 조회 권한이 없습니다.</td>
+                        </tr>
+                        <tr>
+                            <td><code>SQL_GENERATION_FAILED</code></td>
+                            <td>500</td>
+                            <td>SQL 생성 실패</td>
+                            <td style="font-size: 0.85rem;">질문을 SQL로 변환하지 못했습니다.</td>
+                        </tr>
+                        <tr>
+                            <td><code>SQL_NO_RESULTS</code></td>
+                            <td>200</td>
+                            <td>결과 0건</td>
+                            <td style="font-size: 0.85rem;">조건에 해당하는 데이터가 없습니다.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Fallback Strategy -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                <span class="text-gradient">🔄</span> 대체 응답 전략 (Fallback)
+            </h3>
+            <div class="steps-container" style="margin-bottom: var(--spacing-3xl);">
+                <div class="step-item" data-step="1">
+                    <h4 class="step-title">에러 보정 재시도 (최대 2회)</h4>
+                    <p class="step-desc">에러 컨텍스트를 포함하여 SQL 재생성. 재시도 시 의미 보존 검증 (기간조건, 상태값, 집계대상 불변 확인).</p>
+                </div>
+                <div class="step-item" data-step="2">
+                    <h4 class="step-title">테이블 범위 축소</h4>
+                    <p class="step-desc">관련 테이블 1개로 제한하여 재시도. 복잡한 JOIN을 단순화합니다.</p>
+                </div>
+                <div class="step-item" data-step="3">
+                    <h4 class="step-title">RAG Fallback</h4>
+                    <p class="step-desc">SQL 포기, 기존 RAG 파이프라인으로 자동 전환. "데이터 조회에 실패하여 문서 검색 결과로 응답합니다" 안내.</p>
+                </div>
+                <div class="step-item" data-step="4">
+                    <h4 class="step-title">질의 재작성 유도</h4>
+                    <p class="step-desc">RAG도 결과 없으면 "다음과 같이 질문을 바꿔보세요: [예시]" 제안 메시지를 반환합니다.</p>
+                </div>
+            </div>
+
+            <!-- Semantic Preservation -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                <span class="text-gradient">🔍</span> 재시도 시 의미 보존 검증
+            </h3>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>보존 항목</th>
+                            <th>검증 방법</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>기간 조건</strong></td>
+                            <td>원본 SQL의 DATE/TIMESTAMP 조건과 재생성 SQL의 조건 비교. 기간이 변경되었으면 거부.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>상태값 필터</strong></td>
+                            <td>WHERE 절의 상태값(active, overdue 등) 유지 여부 확인</td>
+                        </tr>
+                        <tr>
+                            <td><strong>집계 대상</strong></td>
+                            <td>SELECT 절의 집계 함수(COUNT, SUM 등)와 대상 컬럼 유지 여부 확인</td>
+                        </tr>
+                        <tr>
+                            <td><strong>대상 테이블</strong></td>
+                            <td>핵심 테이블이 제거되지 않았는지 확인. 변질 감지 시 Fallback 전환.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Design Section -->
+    <section class="section" id="api">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">API Design</span>
+                <h2 class="section-title">API 설계</h2>
+                <p class="section-description">
+                    신규 SQL 전용 엔드포인트 4개 + 기존 RAG 엔드포인트에 <code>queryMode</code> 확장.
+                </p>
+            </div>
+
+            <!-- POST /sql/query -->
+            <div style="margin-bottom: var(--spacing-3xl);">
+                <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-lg); display: flex; align-items: center; gap: 8px;">
+                    <span class="method-badge post" style="background: rgba(59, 130, 246, 0.2);">POST</span>
+                    <code>/sql/query</code>
+                    <span style="font-size: 0.85rem; color: var(--color-text-muted); margin-left: 8px;">독립 Text-to-SQL 조회</span>
+                </h3>
+                <div class="features-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div>
+                        <h4 style="color: var(--color-text-secondary); margin-bottom: var(--spacing-sm); font-size: 0.9rem;">요청</h4>
+                        <div class="code-block" data-lang="JSON">
+<code>{
+  <span class="string">"question"</span>: <span class="string">"이번 달 신규 가입자 수는?"</span>,
+  <span class="string">"tables"</span>: [<span class="string">"subscribers"</span>],
+  <span class="string">"maxRows"</span>: 100,
+  <span class="string">"offset"</span>: 0,
+  <span class="string">"model"</span>: null
+}</code>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--color-text-secondary); margin-bottom: var(--spacing-sm); font-size: 0.9rem;">응답 (성공)</h4>
+                        <div class="code-block" data-lang="JSON">
+<code>{
+  <span class="string">"sql"</span>: <span class="string">"SELECT COUNT(*) AS ..."</span>,
+  <span class="string">"columns"</span>: [<span class="string">"신규가입자수"</span>],
+  <span class="string">"rows"</span>: [[42]],
+  <span class="string">"row_count"</span>: 1,
+  <span class="string">"total_count"</span>: 42,
+  <span class="string">"natural_language_summary"</span>:
+    <span class="string">"이번 달 신규 가입자는 총 42명입니다."</span>,
+  <span class="string">"caveats"</span>: [<span class="string">"이번 달 = 2026년 2월 기준"</span>],
+  <span class="string">"execution_time_ms"</span>: 23.5,
+  <span class="string">"validation_passed"</span>: true,
+  <span class="string">"retries_used"</span>: 0
+}</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other Endpoints -->
+            <div class="table-container" style="margin-bottom: var(--spacing-3xl);">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>메서드</th>
+                            <th>엔드포인트</th>
+                            <th>설명</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method-badge get">GET</span></td>
+                            <td><code>/sql/schema</code></td>
+                            <td>사용 가능한 테이블 목록 + 설명 + 컬럼 수 + 행 수 추정값</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge get">GET</span></td>
+                            <td><code>/sql/schema/{table}</code></td>
+                            <td>테이블 상세 스키마 (컬럼 목록, PII 여부, 타입, 샘플 데이터, Few-shot 예제)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method-badge post" style="background: rgba(59, 130, 246, 0.2);">POST</span></td>
+                            <td><code>/sql/validate</code></td>
+                            <td>SQL 검증만 수행 (실행 없음). 유효성, 위반 항목, 정제된 SQL, 예상 비용 반환</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- queryMode Extension -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                <span class="text-gradient">🔀</span> 기존 POST /rag/query 확장
+            </h3>
+            <div class="features-grid" style="grid-template-columns: repeat(4, 1fr);">
+                <div class="info-card" style="flex-direction: column; text-align: center;">
+                    <div class="info-icon cyan" style="margin-bottom: var(--spacing-sm);">🔄</div>
+                    <h4 style="font-size: 0.95rem;">auto</h4>
+                    <p style="font-size: 0.8rem;">기본값. Query Router가 자동 판별</p>
+                </div>
+                <div class="info-card" style="flex-direction: column; text-align: center;">
+                    <div class="info-icon blue" style="margin-bottom: var(--spacing-sm);">📄</div>
+                    <h4 style="font-size: 0.95rem;">rag</h4>
+                    <p style="font-size: 0.8rem;">기존 RAG만 사용</p>
+                </div>
+                <div class="info-card" style="flex-direction: column; text-align: center;">
+                    <div class="info-icon green" style="margin-bottom: var(--spacing-sm);">🔢</div>
+                    <h4 style="font-size: 0.95rem;">sql</h4>
+                    <p style="font-size: 0.8rem;">Text-to-SQL만 사용</p>
+                </div>
+                <div class="info-card" style="flex-direction: column; text-align: center;">
+                    <div class="info-icon purple" style="margin-bottom: var(--spacing-sm);">🔀</div>
+                    <h4 style="font-size: 0.95rem;">hybrid</h4>
+                    <p style="font-size: 0.8rem;">양쪽 결과 통합</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LLM Prompt Strategy Section -->
+    <section class="section" id="prompt">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">LLM Strategy</span>
+                <h2 class="section-title">LLM 프롬프트 전략</h2>
+                <p class="section-description">
+                    SQL 생성 프롬프트 템플릿, Few-shot 선택 기준, 에러 보정 루프로 SQL 생성 정확도를 극대화합니다.
+                </p>
+            </div>
+
+            <!-- Prompt Template -->
+            <div class="code-block" data-lang="Prompt" style="margin-bottom: var(--spacing-3xl);">
+<code><span class="comment">당신은 PostgreSQL SQL 전문가입니다.
+사용자의 한국어 질문을 읽고 정확한 SQL SELECT 쿼리를 생성하세요.</span>
+
+<span class="keyword">### 규칙</span>
+1. SELECT 문만 생성하세요. INSERT/UPDATE/DELETE/DROP 등 금지.
+2. PostgreSQL 문법을 사용하세요.
+3. 반드시 아래 스키마에 존재하는 테이블과 컬럼만 사용하세요.
+4. 한국어 문자열 값은 작은따옴표로 감싸세요.
+5. 결과 행 수가 불확실하면 LIMIT 100을 추가하세요.
+6. 컬럼 별칭은 한국어로 지정하세요 (예: COUNT(*) AS 건수).
+7. SQL만 출력하세요. 설명이나 코드블록은 포함하지 마세요.
+8. [마스킹 대상] 컬럼은 직접 SELECT하지 마세요.
+
+<span class="function">{schema_context}</span>
+<span class="function">{few_shot_examples}</span>
+<span class="function">{retry_error_context}</span>
+
+<span class="keyword">### 질문</span>
+<span class="function">{question}</span></code>
+            </div>
+
+            <!-- Error Correction Loop -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                <span class="text-gradient">🔄</span> 에러 보정 루프
+            </h3>
+            <div class="architecture-diagram" style="margin-bottom: var(--spacing-3xl);">
+                <div class="layer" style="border-left: 3px solid var(--color-success);">
+                    <div class="layer-title"><span>1️⃣</span> 시도 1</div>
+                    <div class="layer-content">
+                        <span class="layer-item">(질문 + 스키마 + Few-shot) → SQL 생성 → 검증 → 비용검사 → 실행</span>
+                    </div>
+                </div>
+                <div class="layer" style="border-left: 3px solid var(--color-warning);">
+                    <div class="layer-title"><span>2️⃣</span> 검증 실패 시 재시도</div>
+                    <div class="layer-content" style="flex-direction: column; gap: 4px;">
+                        <span class="layer-item" style="width: 100%;">이전 SQL 검증 실패 사유 포함 → 재생성</span>
+                        <span class="layer-item highlight" style="width: 100%;">의미 보존 검증: 기간/상태/집계 대상 변경 감지</span>
+                    </div>
+                </div>
+                <div class="layer" style="border-left: 3px solid var(--color-danger);">
+                    <div class="layer-title"><span>3️⃣</span> 실행 실패 시 재시도</div>
+                    <div class="layer-content" style="flex-direction: column; gap: 4px;">
+                        <span class="layer-item" style="width: 100%;">PG 에러 메시지 포함 → 재생성</span>
+                        <span class="layer-item highlight" style="width: 100%;">의미 보존 검증 동일 적용</span>
+                    </div>
+                </div>
+                <div class="layer" style="border-left: 3px solid var(--color-info);">
+                    <div class="layer-title"><span>❌</span> 모두 실패</div>
+                    <div class="layer-content">
+                        <span class="layer-item">Fallback 전략 적용 (테이블 축소 → RAG → 재작성 유도)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Model Recommendations -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                <span class="text-gradient">🧠</span> 모델 권장 사항
+            </h3>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>환경</th>
+                            <th>모델</th>
+                            <th>VRAM</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>개발 PC (GTX 1660 Ti 6GB)</td>
+                            <td><code>qwen2.5:3b-instruct-q4_K_M</code> (기존)</td>
+                            <td>~2GB</td>
+                        </tr>
+                        <tr>
+                            <td>운영 서버</td>
+                            <td><code>qwen2.5:7b-instruct-q4_K_M</code> 또는 <code>qwen2.5-coder:7b</code></td>
+                            <td>~4.5GB</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Deployment & Operations Section -->
+    <section class="section" id="deployment">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Deployment</span>
+                <h2 class="section-title">배포 및 운영</h2>
+                <p class="section-description">
+                    기존 파일 수정 범위, 환경별 설정 기준값, 롤백 시나리오를 포함한 운영 가이드입니다.
+                </p>
+            </div>
+
+            <!-- Modified Files -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                <span class="text-gradient">📝</span> 기존 파일 수정 범위
+            </h3>
+            <div class="features-grid" style="margin-bottom: var(--spacing-3xl);">
+                <div class="info-card">
+                    <div class="info-icon blue">⚙️</div>
+                    <div class="info-content">
+                        <h4>app/settings.py</h4>
+                        <p><code>TEXT_TO_SQL_*</code> 환경변수 18개 추가</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon green">🌐</div>
+                    <div class="info-content">
+                        <h4>app/api.py</h4>
+                        <p>Pydantic 모델 + 4개 신규 엔드포인트 + queryMode 추가</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon purple">🔗</div>
+                    <div class="info-content">
+                        <h4>app/rag_orchestrator.py</h4>
+                        <p>SQL 파이프라인 호출 + 컨텍스트 병합 + SSE 이벤트 추가</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon orange">🐳</div>
+                    <div class="info-content">
+                        <h4>docker-compose.yml</h4>
+                        <p>환경변수 추가 + sql_reader 역할 초기화 스크립트</p>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon cyan">📦</div>
+                    <div class="info-content">
+                        <h4>requirements.txt</h4>
+                        <p><code>sqlparse>=0.5.0</code> 1개 패키지 추가</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Environment Settings -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                <span class="text-gradient">🔧</span> 환경별 설정 기준값
+            </h3>
+            <div class="table-container" style="margin-bottom: var(--spacing-3xl);">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>설정</th>
+                            <th>개발 (PC)</th>
+                            <th>스테이징</th>
+                            <th>운영</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>TIMEOUT_MS</code></td>
+                            <td>10000</td>
+                            <td>5000</td>
+                            <td>5000</td>
+                        </tr>
+                        <tr>
+                            <td><code>MAX_ROWS</code></td>
+                            <td>1000</td>
+                            <td>500</td>
+                            <td>1000</td>
+                        </tr>
+                        <tr>
+                            <td><code>MAX_COST</code></td>
+                            <td>50000</td>
+                            <td>10000</td>
+                            <td>10000</td>
+                        </tr>
+                        <tr>
+                            <td><code>COST_CHECK_ENABLED</code></td>
+                            <td>false</td>
+                            <td>true</td>
+                            <td>true</td>
+                        </tr>
+                        <tr>
+                            <td><code>CONCURRENCY</code></td>
+                            <td>4</td>
+                            <td>2</td>
+                            <td>2</td>
+                        </tr>
+                        <tr>
+                            <td><code>MODEL</code></td>
+                            <td>(기본모델)</td>
+                            <td>(기본모델)</td>
+                            <td>qwen2.5:7b</td>
+                        </tr>
+                        <tr>
+                            <td>로깅 레벨</td>
+                            <td>DEBUG</td>
+                            <td>INFO</td>
+                            <td>WARN</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Rollback -->
+            <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                <span class="text-gradient">⏪</span> 롤백 시나리오
+            </h3>
+            <div class="features-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: var(--spacing-lg);">
+                <div class="card" style="border-color: rgba(239, 68, 68, 0.3);">
+                    <h3 class="card-title" style="color: #ef4444;">Step 1: 기능 비활성화</h3>
+                    <div class="code-block" data-lang="bash" style="margin-top: var(--spacing-md);">
+<code><span class="comment"># .env 수정</span>
+TEXT_TO_SQL_ENABLED=<span class="keyword">false</span>
+
+<span class="comment"># API 컨테이너 재시작</span>
+docker compose restart api</code>
+                    </div>
+                </div>
+                <div class="card" style="border-color: rgba(16, 185, 129, 0.3);">
+                    <h3 class="card-title" style="color: #10b981;">Step 3: 데이터 정합성</h3>
+                    <p class="card-description">
+                        SQL 관련 DB 테이블은 <strong>삭제하지 않음</strong> (데이터 보존).<br>
+                        기존 RAG 파이프라인은 영향 없음.<br>
+                        재활성화: <code>TEXT_TO_SQL_ENABLED=true</code> 후 재시작.
+                    </p>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Step 2: 검증 항목</th>
+                            <th>확인 방법</th>
+                            <th>기대 결과</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>SQL 엔드포인트 비활성화</td>
+                            <td><code>curl /sql/query</code></td>
+                            <td>404 또는 "기능 비활성화" 응답</td>
+                        </tr>
+                        <tr>
+                            <td>RAG queryMode=sql 무시</td>
+                            <td><code>POST /rag/query {"queryMode":"sql"}</code></td>
+                            <td>RAG로 처리, SQL 무시</td>
+                        </tr>
+                        <tr>
+                            <td>SSE 스트리밍 정상</td>
+                            <td><code>POST /rag/query/stream</code></td>
+                            <td>SQL 단계 이벤트 미발생</td>
+                        </tr>
+                        <tr>
+                            <td>기존 RAG 정상 동작</td>
+                            <td><code>POST /rag/query {"question":"테스트"}</code></td>
+                            <td>기존과 동일한 응답</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Roadmap Section -->
+    <section class="section" id="roadmap">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Roadmap</span>
+                <h2 class="section-title">구현 로드맵</h2>
+                <p class="section-description">
+                    5개 Phase로 단계적 구현. 각 Phase는 독립적으로 검증 가능합니다.
+                </p>
+            </div>
+
+            <div class="steps-container">
+                <div class="step-item" data-step="1">
+                    <h4 class="step-title">Phase 1: 기반 구축</h4>
+                    <p class="step-desc">
+                        settings.py 환경변수 추가, sql_store.py 생성, 시스템 테이블 3개 생성, sql_reader 역할 생성 + 권한 검증,
+                        샘플 비즈니스 테이블 + 테스트 데이터, sql_schema_catalog 한국어 설명 등록.
+                    </p>
+                </div>
+                <div class="step-item" data-step="2">
+                    <h4 class="step-title">Phase 2: 핵심 엔진</h4>
+                    <p class="step-desc">
+                        text_to_sql.py 생성 — SchemaMetadataManager, SQLGenerator, SQLValidator (허용목록 주 통제),
+                        CostEstimator (환경별 정책), SQLExecutor (동시성 제어 + total_count), ResultFormatter (PII 마스킹),
+                        의미 보존 검증. requirements.txt에 sqlparse 추가. 단위 테스트 작성.
+                    </p>
+                </div>
+                <div class="step-item" data-step="3">
+                    <h4 class="step-title">Phase 3: API 연동</h4>
+                    <p class="step-desc">
+                        api.py에 4개 엔드포인트 추가, Pydantic 모델, 에러 코드 체계 적용,
+                        sql_query_log 감사 로그 기록, Fallback 전략 구현, 통합 테스트.
+                    </p>
+                </div>
+                <div class="step-item" data-step="4">
+                    <h4 class="step-title">Phase 4: RAG 통합</h4>
+                    <p class="step-desc">
+                        query_router.py 생성, Query 모델에 queryMode 추가,
+                        rag_orchestrator.py 수정 (SQL 파이프라인 + 컨텍스트 병합 + 격리된 LLM 호출),
+                        Hybrid 충돌 해결, SSE 이벤트 추가.
+                    </p>
+                </div>
+                <div class="step-item" data-step="5">
+                    <h4 class="step-title">Phase 5: 프론트엔드 + 마무리</h4>
+                    <p class="step-desc">
+                        프론트엔드 SQL 조회 탭/토글, 스키마 브라우저 UI, SQL 결과 테이블 렌더링,
+                        docker-compose.yml 환경변수, 환경별 설정 적용, 롤백 체크리스트 검증, 문서 정리.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data Flow Examples Section -->
+    <section class="section" id="dataflow">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Data Flow</span>
+                <h2 class="section-title">데이터 흐름 예시</h2>
+            </div>
+
+            <!-- Example 1: Standalone SQL -->
+            <div style="margin-bottom: var(--spacing-3xl);">
+                <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                    <span class="text-gradient">1️⃣</span> 독립 SQL 조회
+                </h3>
+                <div class="info-card" style="margin-bottom: var(--spacing-md); border-color: var(--color-accent-primary);">
+                    <div class="info-icon cyan">💬</div>
+                    <div class="info-content">
+                        <h4>"이번 달 미납 건수는?"</h4>
+                        <p>POST /sql/query</p>
+                    </div>
+                </div>
+                <div class="architecture-diagram" style="padding: var(--spacing-lg);">
+                    <div class="layer">
+                        <div class="layer-content" style="flex-direction: column; gap: 6px;">
+                            <span class="layer-item" style="width: 100%;"><strong>1.</strong> RBAC 권한 확인 → sql:execute 통과</span>
+                            <span class="layer-item" style="width: 100%;"><strong>2.</strong> SchemaMetadataManager → payment_history 스키마 로드</span>
+                            <span class="layer-item" style="width: 100%;"><strong>3.</strong> SQLGenerator → <code>SELECT COUNT(*) AS 미납건수 FROM payment_history WHERE payment_status = 'overdue' AND ...</code></span>
+                            <span class="layer-item" style="width: 100%;"><strong>4.</strong> SQLValidator → 단일 SELECT, 테이블 허용, PII 미접근 → 통과</span>
+                            <span class="layer-item" style="width: 100%;"><strong>5.</strong> CostEstimator → 비용 120 (상한 10000 이내) → 통과</span>
+                            <span class="layer-item" style="width: 100%;"><strong>6.</strong> SQLExecutor → 실행 → rows=[[7]], total_count=7</span>
+                            <span class="layer-item highlight" style="width: 100%;"><strong>7.</strong> ResultFormatter → "이번 달 미납 건수는 총 7건입니다." + caveats</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Example 2: Hybrid -->
+            <div style="margin-bottom: var(--spacing-3xl);">
+                <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                    <span class="text-gradient">2️⃣</span> 하이브리드 조회
+                </h3>
+                <div class="info-card" style="margin-bottom: var(--spacing-md); border-color: #a855f7;">
+                    <div class="info-icon purple">💬</div>
+                    <div class="info-content">
+                        <h4>"청년내일채움공제 미납 현황과 처리 절차를 알려주세요"</h4>
+                        <p>POST /rag/query {"queryMode": "auto"} → Router: "hybrid"</p>
+                    </div>
+                </div>
+                <div class="features-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="card" style="border-color: rgba(59, 130, 246, 0.3);">
+                        <div class="card-icon" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">📄</div>
+                        <h3 class="card-title">RAG 파이프라인</h3>
+                        <p class="card-description">
+                            임베딩 → 하이브리드 검색 → 리랭킹 → "처리 절차" 관련 문서 컨텍스트 추출
+                        </p>
+                    </div>
+                    <div class="card" style="border-color: rgba(6, 182, 212, 0.3);">
+                        <div class="card-icon" style="background: rgba(6, 182, 212, 0.2); color: #06b6d4;">🔢</div>
+                        <h3 class="card-title">SQL 파이프라인 (격리)</h3>
+                        <p class="card-description">
+                            스키마(관련 테이블만) → SQL 생성(독립 LLM 호출) → 검증 → 비용검사 → 실행 → "미납 현황" 데이터
+                        </p>
+                    </div>
+                </div>
+                <div class="info-card" style="margin-top: var(--spacing-md); border-color: var(--color-success);">
+                    <div class="info-icon green">🔗</div>
+                    <div class="info-content">
+                        <h4>Context Merger (충돌 시 SQL 우선)</h4>
+                        <p>SQL 실시간 데이터 + RAG 문서를 결합하여 LLM이 통합 답변 생성. answer + citations + sql_result 반환.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Example 3: Failure Fallback -->
+            <div>
+                <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); display: flex; align-items: center; gap: 8px;">
+                    <span class="text-gradient">3️⃣</span> 실패 → Fallback 흐름
+                </h3>
+                <div class="info-card" style="margin-bottom: var(--spacing-md); border-color: var(--color-warning);">
+                    <div class="info-icon orange">💬</div>
+                    <div class="info-content">
+                        <h4>"최근 3개월 부서별 가입 추이를 보여줘"</h4>
+                        <p>POST /sql/query → 복잡한 쿼리 → 검증 실패 → 재시도 → 비용 초과 → 재시도 → 성공</p>
+                    </div>
+                </div>
+                <div class="architecture-diagram" style="padding: var(--spacing-lg);">
+                    <div class="layer" style="border-left: 3px solid var(--color-danger);">
+                        <div class="layer-content" style="flex-direction: column; gap: 4px;">
+                            <span class="layer-item" style="width: 100%;"><strong>시도 1:</strong> SQL 생성 → 검증 실패 (미등록 함수 사용)</span>
+                        </div>
+                    </div>
+                    <div class="layer" style="border-left: 3px solid var(--color-warning);">
+                        <div class="layer-content" style="flex-direction: column; gap: 4px;">
+                            <span class="layer-item" style="width: 100%;"><strong>재시도 1:</strong> 에러 컨텍스트 → 재생성 → 의미 보존 통과 → 검증 통과</span>
+                            <span class="layer-item" style="width: 100;"><strong>비용 검사:</strong> 비용 15000 → 상한 10000 초과</span>
+                        </div>
+                    </div>
+                    <div class="layer" style="border-left: 3px solid var(--color-success);">
+                        <div class="layer-content" style="flex-direction: column; gap: 4px;">
+                            <span class="layer-item highlight" style="width: 100%;"><strong>재시도 2:</strong> "인덱스 활용" → 재생성 → 의미 보존 통과 → 비용 8000 → 실행 성공</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Policy Decisions Section -->
+    <section class="section" id="policy">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Policy</span>
+                <h2 class="section-title">정책 결정 사항</h2>
+                <p class="section-description">
+                    구현 시 해석 차이를 방지하기 위해 확정된 정책입니다.
+                </p>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>정책</th>
+                            <th>결정</th>
+                            <th>환경변수</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>SQL 실패 시 재시도 우선순위</strong></td>
+                            <td>프롬프트 수정 → 테이블 범위 축소 → RAG fallback</td>
+                            <td><code>MAX_RETRIES=2</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>queryMode=auto 분류 기준</strong></td>
+                            <td>규칙기반 단독으로 시작. 정확도 부족 시 LLM 보조 도입</td>
+                            <td><code>ROUTE_MODE=auto</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>결과 요약 방식</strong></td>
+                            <td>단순 집계는 템플릿, 복합 결과(2개 이상 컬럼)는 LLM</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td><strong>운영 모델 선택</strong></td>
+                            <td>단일 공용 모델로 시작. SQL 정확도 80% 미만 시 전용 모델 분리</td>
+                            <td><code>MODEL=</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>EXPLAIN 비용 검사</strong></td>
+                            <td>개발: off / 운영: on</td>
+                            <td><code>COST_CHECK_ENABLED</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>비용 초과 시 재시도</strong></td>
+                            <td>총 재시도 횟수에 포함 (별도 증가 없음)</td>
+                            <td><code>MAX_RETRIES=2</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>total_count 산출</strong></td>
+                            <td>결과 &lt; LIMIT이면 행수, 아니면 별도 COUNT. 비용 높으면 null</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td><strong>접근 통제 주 수단</strong></td>
+                            <td>앱 레벨 SQLValidator 허용목록 (DB 역할은 보조)</td>
+                            <td><code>ALLOWED_TABLES</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Hybrid 충돌 우선순위</strong></td>
+                            <td>SQL(실시간 데이터) 우선, caveats에 안내</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td><strong>의미 보존 검증</strong></td>
+                            <td>재시도 시 기간/상태/집계 대상 변경 감지 → 변경 시 fallback</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section" id="contact">
+        <div class="container">
+            <div class="cta-section">
+                <div class="cta-content">
+                    <h2 class="cta-title">Text-to-SQL 기능 구현을 검토 중이신가요?</h2>
+                    <p class="cta-description">
+                        기존 RAG 시스템에 정형 데이터 조회 기능을 추가하여
+                        더욱 강력한 하이브리드 AI 시스템을 구축하세요.
+                    </p>
+                    <div style="display: flex; gap: var(--spacing-md); justify-content: center; flex-wrap: wrap;">
+                        <a href="mailto:oys@wrsoft.co.kr" class="btn btn-primary">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            이메일 문의하기
+                        </a>
+                        <a href="tobe_proposal.html" class="btn btn-secondary">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            고도화 로드맵 보기
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <span>🧠</span> RAG System
+                    </div>
+                    <p class="footer-desc">
+                        FastAPI, LlamaIndex, PostgreSQL + pgvector 기반의 엔터프라이즈급 RAG 플랫폼.
+                        사내 문서와 외부 지식을 통합하여 AI 기반 지능형 답변을 제공합니다.
+                    </p>
+                </div>
+                <div class="footer-nav">
+                    <h4>페이지</h4>
+                    <ul class="footer-links">
+                        <li><a href="architecture.html">현시스템 아키텍처</a></li>
+                        <li><a href="index.html">제안서</a></li>
+                        <li><a href="tobe_proposal.html">고도화 모델</a></li>
+                    </ul>
+                </div>
+                <div class="footer-nav">
+                    <h4>Text-to-SQL</h4>
+                    <ul class="footer-links">
+                        <li><a href="#overview">개요</a></li>
+                        <li><a href="#architecture">아키텍처</a></li>
+                        <li><a href="#security">보안</a></li>
+                        <li><a href="#api">API 설계</a></li>
+                    </ul>
+                </div>
+                <div class="footer-nav">
+                    <h4>리소스</h4>
+                    <ul class="footer-links">
+                        <li><a href="#roadmap">구현 로드맵</a></li>
+                        <li><a href="#policy">정책 결정</a></li>
+                        <li><a href="#contact">도입 문의</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="footer-copyright">
+                    &copy; 2026 RAG System. 최종 업데이트: 2026-02-14
+                </p>
+                <div class="footer-social">
+                    <a href="#" aria-label="GitHub">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                        </svg>
+                    </a>
+                    <a href="#" aria-label="Documentation">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const navMenu = document.getElementById('navMenu');
+
+        menuToggle.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+
+        // Close menu when clicking on a link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe cards and sections for animation
+        document.querySelectorAll('.card, .stat-card, .tech-card, .info-card, .step-item, .layer, .flow-box').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+
+    <!-- AI Pattern Background Script -->
+    <script src="bg-ai-pattern.js?v=20260214"></script>
+</body>
+
+</html>
