@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Styles -->
-    <link rel="stylesheet" href="styles.css?v=20260206">
+    <link rel="stylesheet" href="styles.css?v=20260214">
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml"
@@ -111,7 +111,7 @@
                 </h1>
                 <p class="hero-description">
                     RAG(Retrieval-Augmented Generation) 시스템으로 사내 문서와 외부 지식을 통합하여 업무 효율성을 극대화하는
-                    AI 기반 지능형 검색 시스템의 도입을 제안드립니다.
+                    AI 기반 지능형 검색 시스템의 도입을 제안드립니다. 하이브리드 검색, SSE 실시간 스트리밍, PaddleOCR 한국어 OCR을 지원합니다.
                 </p>
                 <div class="hero-buttons">
                     <a href="#overview" class="btn btn-primary">
@@ -369,11 +369,18 @@
                         <div class="info-icon blue">🎯</div>
                         <div class="info-content">
                             <h4>하이브리드 검색 + 재순위화</h4>
-                            <p>벡터 검색과 키워드 검색을 결합(RRF)하고 Cross-Encoder로 최종 순위를 조정</p>
+                            <p>pgvector 벡터 검색과 tsvector 키워드 검색을 RRF 알고리즘으로 결합하고 Cross-Encoder로 최종 순위를 조정</p>
                         </div>
                     </div>
                     <div class="info-card">
-                        <div class="info-icon purple">📎</div>
+                        <div class="info-icon purple">⚡</div>
+                        <div class="info-content">
+                            <h4>SSE 실시간 스트리밍</h4>
+                            <p>Server-Sent Events 기반 토큰 스트리밍으로 답변이 생성되는 즉시 화면에 표시 (체감 속도 50% 이상 개선)</p>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-icon green">📎</div>
                         <div class="info-content">
                             <h4>출처 인용 정보</h4>
                             <p>응답과 함께 참조된 문서의 출처 정보를 제공</p>
@@ -443,7 +450,7 @@
                             <tr>
                                 <td><code>rnd_reports</code></td>
                                 <td>연구 논문 및 실험 보고서</td>
-                                <td>전문 용어/수식 포함 문서의 멀티모달(OCR) 인덱싱</td>
+                                <td>전문 용어/수식 포함 문서의 PaddleOCR 기반 텍스트 추출 (한국어 93~95% 정확도)</td>
                             </tr>
                             <tr>
                                 <td><code>it_helpdesk</code></td>
@@ -477,7 +484,7 @@
                     <div class="card">
                         <div class="card-icon">📈</div>
                         <h3 class="card-title">상태 대시보드</h3>
-                        <p class="card-description">API, PostgreSQL, Redis, Ollama, GPU 상태를 실시간으로 확인합니다.</p>
+                        <p class="card-description">API, OCR, PostgreSQL, Redis, Ollama, GPU 상태를 실시간으로 확인합니다.</p>
                     </div>
                     <div class="card">
                         <div class="card-icon">⚙️</div>
@@ -547,9 +554,8 @@
                         <li style="display: flex; gap: 12px; align-items: start;">
                             <span style="color: var(--color-success); margin-top: 4px;">✔</span>
                             <div>
-                                <strong>All-in-One 패키지</strong>
-                                <p style="font-size: 0.9em; margin-top: 4px; opacity: 0.8;">DB, API, UI, AI 모델 등 시스템 구동에
-                                    필요한 모든 구성요소가 하나의 패키지로 제공되어 10분 내 설치 완료</p>
+                                <strong>All-in-One 패키지 (Docker 6개 서비스)</strong>
+                                <p style="font-size: 0.9em; margin-top: 4px; opacity: 0.8;">API, OCR, UI, DB, Cache, LLM 등 6개 컨테이너가 하나의 패키지로 제공되어 신속한 설치 완료</p>
                             </div>
                         </li>
                         <li style="display: flex; gap: 12px; align-items: start;">
@@ -727,7 +733,7 @@
                             <span class="layer-item" style="width: 100%;"><code>data/raw/WORK_Source/</code> - 소스 코드
                                 파일</span>
                             <span class="layer-item" style="width: 100%;"><code>data/raw/WORK_DOC/</code> - 업무 문서 (PDF,
-                                DOCX, HWPX)</span>
+                                DOCX, HWP, HWPX, Excel)</span>
                         </div>
                     </div>
                     <div class="layer" style="border-color: var(--color-success); margin-top: var(--spacing-md);">
@@ -815,7 +821,7 @@
             </div>
             <div class="footer-bottom">
                 <p class="footer-copyright">
-                    © 2026 RAG System. 최종 업데이트: 2026-02-06
+                    © 2026 RAG System. 최종 업데이트: 2026-02-14
                 </p>
                 <div class="footer-social">
                     <a href="#" aria-label="GitHub">
@@ -901,7 +907,7 @@
     </script>
 
     <!-- AI Pattern Background Script -->
-    <script src="bg-ai-pattern.js?v=20260206"></script>
+    <script src="bg-ai-pattern.js?v=20260214"></script>
 </body>
 
 </html>
