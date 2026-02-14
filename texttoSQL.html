@@ -226,43 +226,413 @@
                 </p>
             </div>
 
-            <!-- Main Architecture Flow -->
-            <div class="architecture-diagram" style="margin-bottom: var(--spacing-3xl); padding: var(--spacing-xl);">
+            <!-- Flowchart Styles -->
+            <style>
+                .flowchart {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 0;
+                    padding: var(--spacing-xl) var(--spacing-md);
+                    position: relative;
+                }
+                .fc-node {
+                    position: relative;
+                    text-align: center;
+                    border-radius: var(--radius-md);
+                    padding: 14px 28px;
+                    font-weight: 600;
+                    font-size: 0.95rem;
+                    color: var(--color-text-primary);
+                    backdrop-filter: blur(12px);
+                    transition: var(--transition-base);
+                    z-index: 2;
+                    min-width: 200px;
+                }
+                .fc-node:hover {
+                    transform: translateY(-3px);
+                    box-shadow: var(--shadow-glow);
+                }
+                .fc-node-sub {
+                    display: block;
+                    font-size: 0.78rem;
+                    font-weight: 400;
+                    color: var(--color-text-muted);
+                    margin-top: 4px;
+                }
+                .fc-node-icon {
+                    font-size: 1.3rem;
+                    margin-bottom: 4px;
+                    display: block;
+                }
+                /* Node color variants */
+                .fc-node--start {
+                    background: linear-gradient(135deg, rgba(6,182,212,0.25), rgba(14,165,233,0.25));
+                    border: 1.5px solid rgba(6,182,212,0.6);
+                    border-radius: var(--radius-xl);
+                }
+                .fc-node--router {
+                    background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(139,92,246,0.2));
+                    border: 1.5px solid rgba(168,85,247,0.5);
+                    clip-path: polygon(12% 0%, 88% 0%, 100% 50%, 88% 100%, 12% 100%, 0% 50%);
+                    padding: 20px 48px;
+                    min-width: 260px;
+                }
+                .fc-node--rag {
+                    background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(37,99,235,0.15));
+                    border: 1.5px solid rgba(59,130,246,0.5);
+                }
+                .fc-node--sql {
+                    background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(14,165,233,0.15));
+                    border: 1.5px solid rgba(6,182,212,0.5);
+                }
+                .fc-node--merger {
+                    background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.15));
+                    border: 1.5px solid rgba(16,185,129,0.5);
+                    min-width: 300px;
+                }
+                .fc-node--llm {
+                    background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(234,179,8,0.15));
+                    border: 1.5px solid rgba(245,158,11,0.5);
+                }
+                .fc-node--response {
+                    background: linear-gradient(135deg, rgba(6,182,212,0.3), rgba(14,165,233,0.3));
+                    border: 2px solid rgba(6,182,212,0.7);
+                    border-radius: var(--radius-xl);
+                    box-shadow: 0 0 20px rgba(6,182,212,0.2);
+                }
+                /* Connector arrows */
+                .fc-arrow {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    position: relative;
+                    z-index: 1;
+                }
+                .fc-arrow-line {
+                    width: 2px;
+                    height: 28px;
+                    background: linear-gradient(180deg, rgba(6,182,212,0.6), rgba(6,182,212,0.3));
+                }
+                .fc-arrow-head {
+                    width: 0; height: 0;
+                    border-left: 6px solid transparent;
+                    border-right: 6px solid transparent;
+                    border-top: 8px solid rgba(6,182,212,0.6);
+                }
+                .fc-arrow-label {
+                    font-size: 0.72rem;
+                    font-weight: 600;
+                    color: var(--color-text-muted);
+                    padding: 2px 8px;
+                    border-radius: var(--radius-full);
+                    background: rgba(255,255,255,0.04);
+                    position: absolute;
+                    white-space: nowrap;
+                }
+                /* Branch layout */
+                .fc-branch {
+                    display: flex;
+                    justify-content: center;
+                    align-items: flex-start;
+                    gap: var(--spacing-xl);
+                    position: relative;
+                    width: 100%;
+                    max-width: 720px;
+                }
+                .fc-branch-arm {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    flex: 1;
+                    min-width: 0;
+                }
+                /* Horizontal connector bar */
+                .fc-hbar {
+                    width: 100%;
+                    max-width: 520px;
+                    height: 2px;
+                    background: linear-gradient(90deg, rgba(59,130,246,0.5), rgba(168,85,247,0.5), rgba(6,182,212,0.5));
+                    position: relative;
+                }
+                .fc-hbar::before, .fc-hbar::after {
+                    content: '';
+                    position: absolute;
+                    top: -3px;
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                }
+                .fc-hbar::before {
+                    left: 0;
+                    background: rgba(59,130,246,0.7);
+                }
+                .fc-hbar::after {
+                    right: 0;
+                    background: rgba(6,182,212,0.7);
+                }
+                .fc-hbar-mid {
+                    position: absolute;
+                    top: -3px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: rgba(168,85,247,0.7);
+                }
+                /* Branch labels */
+                .fc-branch-label {
+                    font-size: 0.72rem;
+                    font-weight: 700;
+                    padding: 3px 10px;
+                    border-radius: var(--radius-full);
+                    margin-bottom: 4px;
+                    letter-spacing: 0.05em;
+                }
+                .fc-branch-label--rag { background: rgba(59,130,246,0.15); color: #60a5fa; }
+                .fc-branch-label--hybrid { background: rgba(168,85,247,0.15); color: #c084fc; }
+                .fc-branch-label--sql { background: rgba(6,182,212,0.15); color: #22d3ee; }
+                /* Merge bar */
+                .fc-merge-bar {
+                    width: 100%;
+                    max-width: 520px;
+                    height: 2px;
+                    background: linear-gradient(90deg, rgba(59,130,246,0.4), rgba(16,185,129,0.6), rgba(6,182,212,0.4));
+                }
+                /* Pipeline steps */
+                .fc-pipeline {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 0;
+                    width: 100%;
+                    max-width: 540px;
+                }
+                .fc-pipe-node {
+                    display: flex;
+                    align-items: center;
+                    gap: var(--spacing-md);
+                    width: 100%;
+                    background: var(--color-bg-card);
+                    border: 1px solid var(--color-border);
+                    border-radius: var(--radius-md);
+                    padding: 14px 20px;
+                    transition: var(--transition-base);
+                    position: relative;
+                    z-index: 2;
+                }
+                .fc-pipe-node:hover {
+                    border-color: var(--color-border-hover);
+                    transform: translateX(6px);
+                    box-shadow: var(--shadow-md);
+                }
+                .fc-pipe-icon {
+                    width: 44px;
+                    height: 44px;
+                    min-width: 44px;
+                    border-radius: var(--radius-md);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.2rem;
+                }
+                .fc-pipe-text h4 {
+                    font-size: 0.95rem;
+                    color: var(--color-text-primary);
+                    margin-bottom: 2px;
+                }
+                .fc-pipe-text p {
+                    font-size: 0.8rem;
+                    color: var(--color-text-muted);
+                    line-height: 1.4;
+                }
+                .fc-pipe-arrow {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    position: relative;
+                }
+                .fc-pipe-arrow-line {
+                    width: 2px;
+                    height: 18px;
+                    background: var(--color-border);
+                }
+                .fc-pipe-arrow-head {
+                    width: 0; height: 0;
+                    border-left: 5px solid transparent;
+                    border-right: 5px solid transparent;
+                    border-top: 6px solid var(--color-accent-primary);
+                }
+                .fc-pipe-retry {
+                    position: absolute;
+                    right: -160px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 0.7rem;
+                    color: var(--color-warning);
+                    white-space: nowrap;
+                }
+                .fc-pipe-retry-arrow {
+                    width: 40px;
+                    height: 1px;
+                    background: rgba(245,158,11,0.4);
+                    position: relative;
+                }
+                .fc-pipe-retry-arrow::before {
+                    content: '';
+                    position: absolute;
+                    left: -1px;
+                    top: -3px;
+                    border-right: 5px solid rgba(245,158,11,0.5);
+                    border-top: 3px solid transparent;
+                    border-bottom: 3px solid transparent;
+                }
+                .fc-pipe-node--active {
+                    border-color: var(--color-accent-primary);
+                    box-shadow: 0 0 15px rgba(6,182,212,0.15);
+                }
+                .fc-pipe-step-num {
+                    position: absolute;
+                    left: -12px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 24px;
+                    height: 24px;
+                    background: var(--color-accent-gradient);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 0.7rem;
+                    font-weight: 700;
+                    color: white;
+                }
+                @media (max-width: 768px) {
+                    .fc-branch { flex-direction: column; align-items: center; gap: var(--spacing-md); }
+                    .fc-hbar, .fc-merge-bar { display: none; }
+                    .fc-node--router { clip-path: none; padding: 14px 28px; min-width: auto; }
+                    .fc-pipe-retry { display: none; }
+                }
+            </style>
+
+            <!-- Main Architecture Flowchart -->
+            <div class="architecture-diagram" style="margin-bottom: var(--spacing-3xl); padding: var(--spacing-xl) var(--spacing-md); overflow: visible;">
                 <div class="layer-title" style="margin-bottom: var(--spacing-lg); font-size: 1rem;">
                     <span>🏗️</span> 전체 흐름도
                 </div>
-                <div class="code-block" data-lang="Flow" style="font-size: 0.8rem; line-height: 1.6;">
-<code>                        ┌──────────────┐
-                        │  사용자 질문  │
-                        └──────┬───────┘
-                               │
-                        ┌──────▼───────┐
-                        │ Query Router │  (app/query_router.py)
-                        │ 의도 분류     │
-                        └──┬───┬───┬───┘
-                     "rag" │   │   │ "sql"
-                           │   │   │
-                    ┌──────▼┐  │  ┌▼───────────┐
-                    │  RAG  │  │  │ Text-to-SQL │
-                    │Pipeline│  │  │  Pipeline   │
-                    │(기존)  │  │  │  (신규)     │
-                    └──────┬┘  │  └┬────────────┘
-                           │   │   │
-                           │ "hybrid"
-                           │   │   │
-                    ┌──────▼───▼───▼──────┐
-                    │   Context Merger     │
-                    │ (SQL결과 + 문서검색)  │
-                    │ ※ 충돌 시 SQL 우선    │
-                    └──────────┬───────────┘
-                               │
-                        ┌──────▼───────┐
-                        │  Ollama LLM  │  → 자연어 응답 생성
-                        └──────┬───────┘
-                               │
-                        ┌──────▼───────┐
-                        │   Response   │  답변 + 인용 + SQL결과
-                        └──────────────┘</code>
+
+                <div class="flowchart">
+                    <!-- 1. User Question -->
+                    <div class="fc-node fc-node--start">
+                        <span class="fc-node-icon">💬</span>
+                        사용자 질문
+                        <span class="fc-node-sub">자연어 (한국어)</span>
+                    </div>
+                    <div class="fc-arrow">
+                        <div class="fc-arrow-line"></div>
+                        <div class="fc-arrow-head"></div>
+                    </div>
+
+                    <!-- 2. Query Router -->
+                    <div class="fc-node fc-node--router">
+                        <span class="fc-node-icon">📡</span>
+                        Query Router
+                        <span class="fc-node-sub">의도 분류 (키워드 기반)</span>
+                    </div>
+                    <div class="fc-arrow">
+                        <div class="fc-arrow-line" style="height: 16px;"></div>
+                    </div>
+
+                    <!-- 3. Branch Bar -->
+                    <div class="fc-hbar">
+                        <div class="fc-hbar-mid"></div>
+                    </div>
+
+                    <!-- 4. Three Branches -->
+                    <div class="fc-branch">
+                        <!-- RAG Branch -->
+                        <div class="fc-branch-arm">
+                            <div class="fc-arrow" style="margin-bottom: 6px;">
+                                <div class="fc-arrow-line" style="height: 16px;"></div>
+                                <div class="fc-arrow-head" style="border-top-color: rgba(59,130,246,0.6);"></div>
+                            </div>
+                            <span class="fc-branch-label fc-branch-label--rag">RAG</span>
+                            <div class="fc-node fc-node--rag" style="min-width: 170px;">
+                                <span class="fc-node-icon">📄</span>
+                                RAG Pipeline
+                                <span class="fc-node-sub">문서 벡터 검색 (기존)</span>
+                            </div>
+                        </div>
+                        <!-- Hybrid Branch -->
+                        <div class="fc-branch-arm">
+                            <div class="fc-arrow" style="margin-bottom: 6px;">
+                                <div class="fc-arrow-line" style="height: 16px;"></div>
+                                <div class="fc-arrow-head" style="border-top-color: rgba(168,85,247,0.6);"></div>
+                            </div>
+                            <span class="fc-branch-label fc-branch-label--hybrid">HYBRID</span>
+                            <div class="fc-node" style="background: rgba(168,85,247,0.12); border: 1.5px solid rgba(168,85,247,0.35); min-width: 170px; font-size: 0.85rem;">
+                                <span class="fc-node-icon">🔀</span>
+                                양쪽 병렬 실행
+                                <span class="fc-node-sub">RAG + SQL 동시 호출</span>
+                            </div>
+                        </div>
+                        <!-- SQL Branch -->
+                        <div class="fc-branch-arm">
+                            <div class="fc-arrow" style="margin-bottom: 6px;">
+                                <div class="fc-arrow-line" style="height: 16px;"></div>
+                                <div class="fc-arrow-head"></div>
+                            </div>
+                            <span class="fc-branch-label fc-branch-label--sql">SQL</span>
+                            <div class="fc-node fc-node--sql" style="min-width: 170px;">
+                                <span class="fc-node-icon">🔢</span>
+                                Text-to-SQL
+                                <span class="fc-node-sub">SQL 생성 → 실행 (신규)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Merge Bar -->
+                    <div class="fc-arrow">
+                        <div class="fc-arrow-line" style="height: 16px;"></div>
+                    </div>
+                    <div class="fc-merge-bar"></div>
+                    <div class="fc-arrow">
+                        <div class="fc-arrow-line" style="height: 12px;"></div>
+                        <div class="fc-arrow-head" style="border-top-color: rgba(16,185,129,0.6);"></div>
+                    </div>
+
+                    <!-- 6. Context Merger -->
+                    <div class="fc-node fc-node--merger">
+                        <span class="fc-node-icon">🔗</span>
+                        Context Merger
+                        <span class="fc-node-sub">SQL 결과 + 문서 검색 통합 · 충돌 시 SQL 우선</span>
+                    </div>
+                    <div class="fc-arrow">
+                        <div class="fc-arrow-line"></div>
+                        <div class="fc-arrow-head" style="border-top-color: rgba(245,158,11,0.6);"></div>
+                    </div>
+
+                    <!-- 7. LLM -->
+                    <div class="fc-node fc-node--llm">
+                        <span class="fc-node-icon">🧠</span>
+                        Ollama LLM
+                        <span class="fc-node-sub">자연어 응답 생성</span>
+                    </div>
+                    <div class="fc-arrow">
+                        <div class="fc-arrow-line"></div>
+                        <div class="fc-arrow-head"></div>
+                    </div>
+
+                    <!-- 8. Response -->
+                    <div class="fc-node fc-node--response">
+                        <span class="fc-node-icon">✅</span>
+                        Response
+                        <span class="fc-node-sub">답변 + 인용 + SQL 결과 + caveats</span>
+                    </div>
                 </div>
             </div>
 
@@ -270,44 +640,96 @@
             <h3 style="color: var(--color-text-primary); margin-bottom: var(--spacing-xl); text-align: center;">
                 Text-to-SQL 파이프라인 상세
             </h3>
-            <div class="flow-container" style="flex-direction: column; gap: var(--spacing-md); align-items: center;">
-                <div class="flow-step" style="flex-direction: column; gap: var(--spacing-sm); width: 100%; max-width: 500px;">
-                    <div class="flow-box" style="width: 100%;">
-                        <div class="flow-box-icon">📋</div>
-                        <div class="flow-box-title">SchemaMetadataManager</div>
-                        <div class="flow-box-desc">질문 관련 테이블만 선별하여 DDL + 샘플 데이터 로드</div>
-                    </div>
-                    <div class="flow-arrow">▼</div>
-                    <div class="flow-box" style="width: 100%;">
-                        <div class="flow-box-icon">🤖</div>
-                        <div class="flow-box-title">SQLGenerator</div>
-                        <div class="flow-box-desc">LLM에 (질문 + 스키마 + Few-shot) 전달 → SQL 생성</div>
-                    </div>
-                    <div class="flow-arrow">▼</div>
-                    <div class="flow-box" style="width: 100%;">
-                        <div class="flow-box-icon">🛡️</div>
-                        <div class="flow-box-title">SQLValidator</div>
-                        <div class="flow-box-desc">sqlparse AST 분석, 단일 SELECT만 허용, 차단 패턴 검사</div>
-                    </div>
-                    <div class="flow-arrow" style="display: flex; align-items: center; gap: var(--spacing-sm);">
-                        ▼ <span style="font-size: 0.75rem; color: var(--color-warning);">실패 시 → 재시도 (최대 2회, 의미 보존 검증)</span>
-                    </div>
-                    <div class="flow-box" style="width: 100%;">
-                        <div class="flow-box-icon">💰</div>
-                        <div class="flow-box-title">CostEstimator</div>
-                        <div class="flow-box-desc">EXPLAIN 비용 상한 검사 (운영: 필수 / 개발: 선택)</div>
-                    </div>
-                    <div class="flow-arrow">▼</div>
-                    <div class="flow-box" style="width: 100%;">
-                        <div class="flow-box-icon">⚡</div>
-                        <div class="flow-box-title">SQLExecutor</div>
-                        <div class="flow-box-desc">읽기전용, timeout 5초, 최대 1000행, 페이지네이션</div>
-                    </div>
-                    <div class="flow-arrow">▼</div>
-                    <div class="flow-box" style="width: 100%; border-color: var(--color-accent-primary);">
-                        <div class="flow-box-icon">📊</div>
-                        <div class="flow-box-title">ResultFormatter</div>
-                        <div class="flow-box-desc">마크다운 테이블 + 자연어 요약 + PII 마스킹</div>
+            <div class="architecture-diagram" style="padding: var(--spacing-xl) var(--spacing-md); overflow: visible;">
+                <div class="flowchart">
+                    <div class="fc-pipeline">
+                        <!-- Step 1 -->
+                        <div class="fc-pipe-node">
+                            <span class="fc-pipe-step-num">1</span>
+                            <div class="fc-pipe-icon" style="background: rgba(6,182,212,0.15); color: #06b6d4;">📋</div>
+                            <div class="fc-pipe-text">
+                                <h4>SchemaMetadataManager</h4>
+                                <p>질문 관련 테이블만 선별 · DDL + 샘플 데이터 + 동의어 로드</p>
+                            </div>
+                        </div>
+                        <div class="fc-pipe-arrow">
+                            <div class="fc-pipe-arrow-line"></div>
+                            <div class="fc-pipe-arrow-head"></div>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="fc-pipe-node">
+                            <span class="fc-pipe-step-num">2</span>
+                            <div class="fc-pipe-icon" style="background: rgba(168,85,247,0.15); color: #a855f7;">🤖</div>
+                            <div class="fc-pipe-text">
+                                <h4>SQLGenerator</h4>
+                                <p>LLM 호출 (질문 + 스키마 + Few-shot) → SQL SELECT 생성</p>
+                            </div>
+                        </div>
+                        <div class="fc-pipe-arrow">
+                            <div class="fc-pipe-arrow-line"></div>
+                            <div class="fc-pipe-arrow-head"></div>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="fc-pipe-node" style="border-color: rgba(239,68,68,0.3);">
+                            <span class="fc-pipe-step-num">3</span>
+                            <div class="fc-pipe-icon" style="background: rgba(239,68,68,0.15); color: #ef4444;">🛡️</div>
+                            <div class="fc-pipe-text">
+                                <h4>SQLValidator</h4>
+                                <p>sqlparse AST · 단일 SELECT · 테이블 허용목록 · PII 보호</p>
+                            </div>
+                            <div class="fc-pipe-retry">
+                                <div class="fc-pipe-retry-arrow"></div>
+                                실패 → 재시도 (최대 2회)
+                            </div>
+                        </div>
+                        <div class="fc-pipe-arrow">
+                            <div class="fc-pipe-arrow-line"></div>
+                            <div class="fc-pipe-arrow-head"></div>
+                        </div>
+
+                        <!-- Step 4 -->
+                        <div class="fc-pipe-node" style="border-color: rgba(245,158,11,0.3);">
+                            <span class="fc-pipe-step-num">4</span>
+                            <div class="fc-pipe-icon" style="background: rgba(245,158,11,0.15); color: #f59e0b;">💰</div>
+                            <div class="fc-pipe-text">
+                                <h4>CostEstimator</h4>
+                                <p>EXPLAIN 비용 상한 검사 · 풀스캔 감지 (운영: 필수 / 개발: 선택)</p>
+                            </div>
+                        </div>
+                        <div class="fc-pipe-arrow">
+                            <div class="fc-pipe-arrow-line"></div>
+                            <div class="fc-pipe-arrow-head"></div>
+                        </div>
+
+                        <!-- Step 5 -->
+                        <div class="fc-pipe-node">
+                            <span class="fc-pipe-step-num">5</span>
+                            <div class="fc-pipe-icon" style="background: rgba(59,130,246,0.15); color: #3b82f6;">⚡</div>
+                            <div class="fc-pipe-text">
+                                <h4>SQLExecutor</h4>
+                                <p>READ ONLY · timeout 5초 · 최대 1000행 · 동시성 세마포어</p>
+                            </div>
+                            <div class="fc-pipe-retry">
+                                <div class="fc-pipe-retry-arrow"></div>
+                                PG 에러 → 재시도
+                            </div>
+                        </div>
+                        <div class="fc-pipe-arrow">
+                            <div class="fc-pipe-arrow-line"></div>
+                            <div class="fc-pipe-arrow-head"></div>
+                        </div>
+
+                        <!-- Step 6 -->
+                        <div class="fc-pipe-node fc-pipe-node--active">
+                            <span class="fc-pipe-step-num">6</span>
+                            <div class="fc-pipe-icon" style="background: rgba(16,185,129,0.15); color: #10b981;">📊</div>
+                            <div class="fc-pipe-text">
+                                <h4>ResultFormatter</h4>
+                                <p>마크다운 테이블 + 자연어 요약 + PII 마스킹 + 불확실성 고지</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
