@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="RAG 시스템 Rocky Linux 9.6 마이그레이션 상세 계획서 - 환경 설정, Docker 배포, 유지보수 가이드">
+    <meta name="description" content="RAG 시스템 Rocky Linux 9.7 마이그레이션 상세 계획서 - 환경 설정, Docker 배포, 유지보수 가이드">
     <meta name="keywords" content="Rocky Linux, Migration, Docker, GPU, Ollama, RAG">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Styles -->
-    <link rel="stylesheet" href="styles.css?v=20260206">
+    <link rel="stylesheet" href="styles.css?v=20260214">
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml"
@@ -191,11 +191,11 @@
             <div class="hero-content">
                 <span class="hero-badge">Migration Guide</span>
                 <h1 class="hero-title">
-                    Rocky Linux 9.6<br>
+                    Rocky Linux 9.7<br>
                     <span class="gradient-text">서버 구축 계획서</span>
                 </h1>
                 <p class="hero-description">
-                    RAG 시스템을 Windows 환경에서 Rocky Linux 9.6 (Blue Onyx) 엔터프라이즈 서버로 마이그레이션하기 위한
+                    RAG 시스템을 Windows 환경에서 Rocky Linux 9.7 (Blue Onyx) 엔터프라이즈 서버로 마이그레이션하기 위한
                     상세 구축 절차, 환경 설정, 트러블슈팅 가이드입니다.
                 </p>
                 <div class="hero-buttons">
@@ -232,7 +232,7 @@
                         <tr>
                             <td><strong>운영체제</strong></td>
                             <td>Windows 10</td>
-                            <td>Rocky Linux 9.6 (Blue Onyx)</td>
+                            <td>Rocky Linux 9.7 (Blue Onyx)</td>
                         </tr>
                         <tr>
                             <td><strong>서버 IP</strong></td>
@@ -338,7 +338,7 @@
             <div class="section-header">
                 <span class="section-label">Step 1</span>
                 <h2 class="section-title">서버 기본 설정</h2>
-                <p class="section-description">Rocky Linux 9.6 OS 설정 및 Docker/NVIDIA 드라이버 설치</p>
+                <p class="section-description">Rocky Linux 9.7 OS 설정 및 Docker/NVIDIA 드라이버 설치</p>
             </div>
 
             <div class="step-item" style="margin-bottom: 3rem;">
@@ -378,24 +378,86 @@ newgrp docker</code>
             </div>
 
             <div class="step-item" style="margin-bottom: 3rem;">
-                <h3 class="step-title">1.3 NVIDIA 드라이버 & Toolkit</h3>
+                <h3 class="step-title">1.3 NVIDIA 드라이버 설치 (Rocky 9.7 권장 방법)</h3>
                 <div class="code-block" data-lang="bash">
-                    <code># 1. CUDA 저장소 추가
-sudo dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo
+                    <code># ──────────────────────────────────────────────
+# 사전 준비: 커널 헤더 및 빌드 도구 설치
+# ──────────────────────────────────────────────
+sudo dnf install -y kernel-devel-$(uname -r) kernel-headers-$(uname -r)
+sudo dnf install -y dkms gcc make elfutils-libelf-devel
 
-# 2. 드라이버 설치
-sudo dnf module install -y nvidia-driver:latest-dkms
-# 설치 후 재부팅 필요: sudo reboot
+# ──────────────────────────────────────────────
+# Nouveau 오픈소스 드라이버 비활성화 (충돌 방지)
+# ──────────────────────────────────────────────
+echo "blacklist nouveau" | sudo tee /etc/modprobe.d/blacklist-nouveau.conf
+echo "options nouveau modeset=0" | sudo tee -a /etc/modprobe.d/blacklist-nouveau.conf
+sudo dracut --force
+sudo grubby --update-kernel=ALL --args="rd.driver.blacklist=nouveau modprobe.blacklist=nouveau"
 
-# 3. NVIDIA Container Toolkit 설치 (Docker용)
+# ──────────────────────────────────────────────
+# CUDA 저장소 추가 및 드라이버 설치
+# ──────────────────────────────────────────────
+sudo dnf config-manager --add-repo \
+    https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo
+
+# ⚠️ 아래 명령은 Rocky 9.7에서 nvidia-smi 인식 실패가 빈번함 (사용 금지)
+# sudo dnf module install -y nvidia-driver:latest-dkms
+
+# ✅ 권장: cuda-drivers 패키지로 설치
+sudo dnf install -y cuda-drivers
+
+# 설치 후 반드시 재부팅
+sudo reboot</code>
+                </div>
+                <p class="command-desc">
+                    <strong>재부팅 후 확인:</strong> <code>nvidia-smi</code> 명령으로 NVIDIA RTX PRO 4500 Blackwell GPU 정보와 드라이버 버전이 표시되어야 합니다.
+                    만약 표시되지 않으면 아래 트러블슈팅 섹션을 참고하세요.
+                </p>
+            </div>
+
+            <div class="step-item" style="margin-bottom: 3rem;">
+                <h3 class="step-title">1.3.1 nvidia-smi 정상 확인</h3>
+                <div class="code-block" data-lang="bash">
+                    <code># GPU 인식 확인 (반드시 재부팅 후)
+nvidia-smi
+
+# 정상 출력 예시:
+# +-----------------------------------------------------------------------------------------+
+# | NVIDIA-SMI 570.xx.xx    Driver Version: 570.xx.xx    CUDA Version: 12.x                 |
+# |   GPU  Name             ...     Memory-Usage                                            |
+# |   0    NVIDIA RTX PRO 4500 ...  0MiB / 24576MiB                                        |
+# +-----------------------------------------------------------------------------------------+
+
+# 드라이버 모듈 로드 확인
+lsmod | grep nvidia
+
+# 커널 메시지에서 NVIDIA 관련 확인
+dmesg | grep -i nvidia</code>
+                </div>
+            </div>
+
+            <div class="step-item" style="margin-bottom: 3rem;">
+                <h3 class="step-title">1.3.2 NVIDIA Container Toolkit 설치 (Docker GPU 지원)</h3>
+                <div class="code-block" data-lang="bash">
+                    <code># 1. nvidia-smi 정상 출력 확인 후 진행
+nvidia-smi
+
+# 2. NVIDIA Container Toolkit 저장소 추가
 curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | \
     sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo
 
+# 3. Toolkit 설치
 sudo dnf install -y nvidia-container-toolkit
+
+# 4. Docker 런타임에 NVIDIA 등록
 sudo nvidia-ctk runtime configure --runtime=docker
-sudo systemctl restart docker</code>
+sudo systemctl restart docker
+
+# 5. Docker에서 GPU 테스트
+docker run --rm --gpus all nvidia/cuda:12.1.1-base-ubuntu22.04 nvidia-smi</code>
                 </div>
-                <p class="command-desc">설치 후 <code>nvidia-smi</code> 명령으로 NVIDIA RTX PRO 4500 Blackwell 정보가 표시되어야 합니다.
+                <p class="command-desc">
+                    Docker 컨테이너 내부에서도 <code>nvidia-smi</code> 출력이 나타나면 GPU 패스스루 설정 완료입니다.
                 </p>
             </div>
 
@@ -635,20 +697,45 @@ docker exec -it rag-postgres psql -U rag_user -d rag \
             </div>
 
             <div class="troubleshoot-card">
-                <div class="troubleshoot-title">⚠️ NVIDIA 드라이버 미인식</div>
-                <p><code>nvidia-smi</code> 명령 실패 시</p>
+                <div class="troubleshoot-title">⚠️ nvidia-smi 명령 실패 / "command not found"</div>
+                <p>드라이버 설치 후 <code>nvidia-smi</code>가 동작하지 않는 경우</p>
                 <div class="command-desc">
-                    Secure Boot가 켜져 있는지 확인하세요. 필요시 MOK 등록하거나 Secure Boot를 비활성화해야 할 수 있습니다.<br>
-                    <code>sudo dnf module install -y nvidia-driver:latest-dkms</code> 재설치 시도.
+                    <strong>원인 1: Nouveau 드라이버 충돌</strong><br>
+                    <code>lsmod | grep nouveau</code> — 출력이 있으면 Nouveau가 아직 활성 상태입니다.<br>
+                    <code>echo "blacklist nouveau" | sudo tee /etc/modprobe.d/blacklist-nouveau.conf</code><br>
+                    <code>sudo dracut --force && sudo reboot</code>
+                </div>
+                <div class="command-desc" style="margin-top: 0.75rem;">
+                    <strong>원인 2: dnf module 방식 설치 실패</strong><br>
+                    Rocky 9.7에서 <code>dnf module install nvidia-driver:latest-dkms</code>는 모듈 스트림 문제로 실패하는 경우가 많습니다.<br>
+                    기존 설치를 제거하고 <code>cuda-drivers</code>로 재설치하세요:<br>
+                    <code>sudo dnf remove -y nvidia-driver* cuda-drivers*</code><br>
+                    <code>sudo dnf install -y cuda-drivers && sudo reboot</code>
+                </div>
+                <div class="command-desc" style="margin-top: 0.75rem;">
+                    <strong>원인 3: 커널 헤더 불일치</strong><br>
+                    커널 업데이트 후 헤더가 맞지 않으면 DKMS 빌드가 실패합니다.<br>
+                    <code>sudo dnf install -y kernel-devel-$(uname -r) kernel-headers-$(uname -r)</code><br>
+                    <code>sudo dkms autoinstall && sudo reboot</code>
+                </div>
+                <div class="command-desc" style="margin-top: 0.75rem;">
+                    <strong>원인 4: Secure Boot 활성 상태</strong><br>
+                    UEFI Secure Boot가 켜져 있으면 서명되지 않은 커널 모듈이 로드되지 않습니다.<br>
+                    BIOS에서 Secure Boot를 비활성화하거나, MOK(Machine Owner Key) 등록이 필요합니다.<br>
+                    <code>mokutil --sb-state</code> — Secure Boot 상태 확인
                 </div>
             </div>
 
             <div class="troubleshoot-card">
-                <div class="troubleshoot-title">⚠️ Docker GPU 실패</div>
+                <div class="troubleshoot-title">⚠️ nvidia-smi는 되지만 Docker GPU 실패</div>
                 <p><code>docker run --gpus all ...</code> 에러 발생 시</p>
                 <div class="command-desc">
-                    NVIDIA Container Toolkit 설정이 누락되었을 수 있습니다.<br>
-                    <code>sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker</code> 실행.
+                    호스트에서 <code>nvidia-smi</code>가 정상이라면 NVIDIA Container Toolkit 설정을 확인하세요.<br>
+                    <code>sudo nvidia-ctk runtime configure --runtime=docker</code><br>
+                    <code>sudo systemctl restart docker</code><br>
+                    <code>docker run --rm --gpus all nvidia/cuda:12.1.1-base-ubuntu22.04 nvidia-smi</code><br><br>
+                    위 테스트가 실패하면 <code>/etc/docker/daemon.json</code>에 nvidia 런타임이 등록되었는지 확인:<br>
+                    <code>cat /etc/docker/daemon.json</code> — <code>"nvidia"</code> 런타임 항목이 있어야 합니다.
                 </div>
             </div>
 
@@ -672,7 +759,7 @@ docker exec -it rag-postgres psql -U rag_user -d rag \
                     </div>
                     <p class="footer-desc">
                         FastAPI, LlamaIndex, PostgreSQL + pgvector 기반의 엔터프라이즈급 RAG 플랫폼.<br>
-                        Rocky Linux 9.6 마이그레이션 가이드.
+                        Rocky Linux 9.7 마이그레이션 가이드.
                     </p>
                 </div>
                 <div class="footer-nav">
@@ -694,7 +781,7 @@ docker exec -it rag-postgres psql -U rag_user -d rag \
             </div>
             <div class="footer-bottom">
                 <p class="footer-copyright">
-                    © 2026 RAG System. Last Updated: 2026-02-12
+                    © 2026 RAG System. Last Updated: 2026-02-14
                 </p>
             </div>
         </div>
@@ -776,7 +863,7 @@ docker exec -it rag-postgres psql -U rag_user -d rag \
             observer.observe(el);
         });
     </script>
-    <script src="bg-ai-pattern.js?v=20260206"></script>
+    <script src="bg-ai-pattern.js?v=20260214"></script>
 </body>
 
 </html>
