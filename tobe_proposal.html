@@ -215,10 +215,10 @@
                 <div class="architecture-info" style="direction: ltr;">
                     <span class="section-label" style="background: var(--color-success); color: white;">Phase 2
                         (완료)</span>
-                    <h2 class="section-title">하이브리드 검색 구현</h2>
+                    <h2 class="section-title">하이브리드 검색 및 품질 고도화</h2>
                     <p class="section-description">
-                        PostgreSQL의 벡터 검색과 전문 검색(Keyword Search)을 결합한 하이브리드 검색 엔진이
-                        적용되었습니다. (RRF 알고리즘 기반)
+                        정밀한 검색 결과 도출을 위해 하이브리드 검색(Hybrid), 재순위화(Rerank), 가상 문서 임베딩(HyDE)
+                        3대 핵심 기술의 구현을 모두 완료했습니다.
                     </p>
 
                     <div class="table-container mt-2">
@@ -232,19 +232,19 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>벡터 검색</td>
-                                    <td>pgvector (HNSW)</td>
-                                    <td style="color: var(--color-success);">✅ 적용됨</td>
+                                    <td>하이브리드 검색 (Hybrid)</td>
+                                    <td>Vector(HNSW) + Keyword(BM25)</td>
+                                    <td style="color: var(--color-success);">✅ 구현 완료</td>
                                 </tr>
                                 <tr>
-                                    <td>키워드 검색</td>
-                                    <td>tsvector</td>
-                                    <td style="color: var(--color-success);">✅ 적용됨</td>
+                                    <td>재순위화 (Rerank)</td>
+                                    <td>BGE-Reranker (Cross-Encoder)</td>
+                                    <td style="color: var(--color-success);">✅ 구현 완료</td>
                                 </tr>
                                 <tr>
-                                    <td>랭킹 결합</td>
-                                    <td>RRF (Reciprocal Rank Fusion)</td>
-                                    <td style="color: var(--color-success);">✅ 적용됨</td>
+                                    <td>가상 문서 임베딩 (HyDE)</td>
+                                    <td>LLM 기반 Query Expansion</td>
+                                    <td style="color: var(--color-success);">✅ 구현 완료</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -260,26 +260,29 @@
                 </div>
                 <div class="architecture-diagram" style="direction: ltr;">
                     <div class="code-block" data-lang="markdown">
-                        <span class="comment"># 현재 검색 파이프라인 동작</span>
+                        <span class="comment"># 고도화된 검색 파이프라인 (완료)</span>
 
-                        1. **Dual Retrieval**
+                        1. **Query Transformation (HyDE)**
+                        └── LLM이 가상의 답변 생성 → 해당 답변으로 임베딩 생성
+
+                        2. **Hybrid Retrieval (Dual)**
                         ├── [Vector] pgvector cosine similarity
-                        └── [Keyword] tsvector text match
+                        └── [Keyword] tsvector text match (BM25)
 
-                        2. **Fusion (RRF)**
-                        score = 1 / (k + rank_i)
+                        3. **Fusion & Re-ranking**
+                        ├── [RRF] 랭킹 스코어 결합
+                        └── [Reranker] Cross-Encoder 기반 정밀 재순위화
 
-                        3. **Re-ranking**
-                        Cross-Encoder (상위 20개 대상)
-
-                        4. **Result**
-                        최종 답변 생성 컨텍스트로 사용
+                        4. **Final Context**
+                        상위 N개 컨텍스트를 LLM 답변 생성에 활용
                     </div>
                     <div class="info-card mt-2"
                         style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--color-success);">
-                        <div style="font-weight: 600; margin-bottom: 8px; color: var(--color-success);">✅ 구현 효과</div>
+                        <div style="font-weight: 600; margin-bottom: 8px; color: var(--color-success);">✅ 구현 완료 리포트
+                        </div>
                         <p style="font-size: 0.9rem; color: var(--color-text-secondary);">
-                            고유명사, 코드 변수명, 정확한 키워드 매칭이 필요한 검색에서 정확도가 대폭 향상되었습니다.
+                            HyDE를 통해 질문의 의도를 더 풍부하게 해석하고, Hybrid 검색과 Rerank를 순차적으로 적용하여
+                            고유명사 및 코드 매칭은 물론 의미론적 유사도 판별 정확도를 극대화했습니다.
                         </p>
                     </div>
                 </div>
@@ -300,7 +303,8 @@
             <div class="features-grid">
                 <div class="card" style="border: 1px solid var(--color-success);">
                     <div class="card-icon">🧠</div>
-                    <h3 class="card-title">고성능 모델 탑재 <span style="color: var(--color-success); font-size: 0.8em;">✅ 구현 완료</span></h3>
+                    <h3 class="card-title">고성능 모델 탑재 <span style="color: var(--color-success); font-size: 0.8em;">✅ 구현
+                            완료</span></h3>
                     <p class="card-description">
                         고객사 GPU 사양에 맞춰 2026년 기준으로 확인된 정보(Hugging Face와 공식 문서 기반)에서 1위 ~ 3위 순서로 선별 탑재 합니다.
                     </p>
@@ -320,7 +324,8 @@
                 </div>
                 <div class="card" style="border: 1px solid var(--color-success);">
                     <div class="card-icon">⚡</div>
-                    <h3 class="card-title">스트리밍 응답 <span style="color: var(--color-success); font-size: 0.8em;">✅ 구현 완료</span></h3>
+                    <h3 class="card-title">스트리밍 응답 <span style="color: var(--color-success); font-size: 0.8em;">✅ 구현
+                            완료</span></h3>
                     <p class="card-description">
                         SSE 기반 토큰 스트리밍으로 체감 응답 속도를 50% 이상 개선
                     </p>
@@ -329,7 +334,8 @@
                         <span
                             style="font-size: 0.85rem; color: var(--color-success); font-weight: 600; display: block; margin-bottom: 4px;">✅
                             구현 완료 항목</span>
-                        <ul style="font-size: 0.85rem; color: var(--color-text-secondary); padding-left: 16px; margin: 0; line-height: 1.6;">
+                        <ul
+                            style="font-size: 0.85rem; color: var(--color-text-secondary); padding-left: 16px; margin: 0; line-height: 1.6;">
                             <li>서버 SSE 이벤트 표준: meta → delta → final → done</li>
                             <li>heartbeat 정책 및 재연결 힌트</li>
                             <li>웹 EventSource + Python SSE 클라이언트</li>
@@ -339,7 +345,8 @@
                 </div>
                 <div class="card" style="border: 1px solid var(--color-success);">
                     <div class="card-icon">🔢</div>
-                    <h3 class="card-title">임베딩 모델 업그레이드 <span style="color: var(--color-success); font-size: 0.8em;">✅ 구현 완료</span></h3>
+                    <h3 class="card-title">임베딩 모델 업그레이드 <span style="color: var(--color-success); font-size: 0.8em;">✅
+                            구현 완료</span></h3>
                     <p class="card-description">
                         BGE-M3 (1024d) 모델로 전환 완료. Dense + Sparse + ColBERT 멀티벡터 지원으로 검색 정밀도가 대폭 향상되었습니다.
                     </p>
@@ -351,14 +358,16 @@
                         <ul
                             style="font-size: 0.85rem; color: var(--color-text-secondary); padding-left: 16px; margin: 0; line-height: 1.6;">
                             <li><del>intfloat/multilingual-e5-base (768d)</del> → 교체 완료</li>
-                            <li><b>현재:</b> <span style="color: var(--color-success); font-weight: bold;">BAAI/bge-m3 (1024d)</span> — 다국어 + Dense/Sparse/ColBERT</li>
+                            <li><b>현재:</b> <span style="color: var(--color-success); font-weight: bold;">BAAI/bge-m3
+                                    (1024d)</span> — 다국어 + Dense/Sparse/ColBERT</li>
                             <li>PostgreSQL vector(768) → vector(1024) 마이그레이션 완료</li>
                         </ul>
                     </div>
                 </div>
                 <div class="card" style="border: 1px solid var(--color-success);">
                     <div class="card-icon">🧩</div>
-                    <h3 class="card-title">프롬프트 구조화 <span style="color: var(--color-success); font-size: 0.8em;">✅ 구현 완료</span></h3>
+                    <h3 class="card-title">프롬프트 구조화 <span style="color: var(--color-success); font-size: 0.8em;">✅ 구현
+                            완료</span></h3>
                     <p class="card-description">
                         모듈형 프롬프트 구성으로 역할 정의·컨텍스트 규칙·인용 규칙을 표준화하여 답변 일관성 확보
                     </p>
@@ -367,7 +376,8 @@
                         <span
                             style="font-size: 0.85rem; color: var(--color-success); font-weight: 600; display: block; margin-bottom: 4px;">📊
                             응답속도 개선 진행률: 8/10 단계 완료</span>
-                        <ul style="font-size: 0.85rem; color: var(--color-text-secondary); padding-left: 16px; margin: 0; line-height: 1.6;">
+                        <ul
+                            style="font-size: 0.85rem; color: var(--color-text-secondary); padding-left: 16px; margin: 0; line-height: 1.6;">
                             <li>✅ 성능 계측 표준화 / 출력 토큰 정책 / 프롬프트 경량화</li>
                             <li>✅ 검색 최적화 / 재랭킹 경량화 / 모델 라우팅</li>
                             <li>✅ 추론 엔진 튜닝 / 동시성·백프레셔 제어</li>
@@ -384,7 +394,8 @@
         <div class="container">
             <div class="architecture-wrapper">
                 <div class="architecture-info">
-                    <span class="section-label" style="background: var(--color-warning); color: white;">Phase 4 (진행 중)</span>
+                    <span class="section-label" style="background: var(--color-warning); color: white;">Phase 4 (진행
+                        중)</span>
                     <h2 class="section-title">데이터 파이프라인 강화</h2>
                     <p class="section-description">
                         PaddleOCR 마이크로서비스와 HWP 문서 지원이 구현 완료되었습니다. 실시간 인덱싱과 메타데이터 확장을 추진합니다.
@@ -392,7 +403,8 @@
                     <div class="steps-container mt-2">
                         <div class="step-item" data-step="✅">
                             <h4 class="step-title">PaddleOCR 한국어 OCR</h4>
-                            <p class="step-desc">GPU 가속 OCR 마이크로서비스 (rag-api-ocr:9000). 스캔 PDF 및 이미지에서 한국어 텍스트 93~95% 정확도 추출</p>
+                            <p class="step-desc">GPU 가속 OCR 마이크로서비스 (rag-api-ocr:9000). 스캔 PDF 및 이미지에서 한국어 텍스트 93~95%
+                                정확도 추출</p>
                         </div>
                         <div class="step-item" data-step="✅">
                             <h4 class="step-title">HWP 문서 지원</h4>
@@ -400,11 +412,13 @@
                         </div>
                         <div class="step-item" data-step="✅">
                             <h4 class="step-title">BGE-M3 임베딩 전환</h4>
-                            <p class="step-desc">BAAI/bge-m3 (1024d) 전환 완료. Dense + Sparse + ColBERT 멀티벡터 지원으로 검색 정밀도 대폭 향상</p>
+                            <p class="step-desc">BAAI/bge-m3 (1024d) 전환 완료. Dense + Sparse + ColBERT 멀티벡터 지원으로 검색 정밀도 대폭
+                                향상</p>
                         </div>
                         <div class="step-item" data-step="3">
                             <h4 class="step-title">Qwen2.5-VL 멀티모달</h4>
-                            <p class="step-desc">Vision-Language 모델로 문서 이미지·표·차트를 직접 이해. PaddleOCR과 병행하여 복합 레이아웃 문서 정확도 향상</p>
+                            <p class="step-desc">Vision-Language 모델로 문서 이미지·표·차트를 직접 이해. PaddleOCR과 병행하여 복합 레이아웃 문서 정확도
+                                향상</p>
                         </div>
                         <div class="step-item" data-step="4">
                             <h4 class="step-title">메타데이터 확장</h4>
@@ -422,13 +436,15 @@
                         <div style="text-align: center;">
                             <div style="font-size: 3rem; margin-bottom: 20px;">📷</div>
                             <h3>OCR + 문서 파이프라인</h3>
-                            <p style="color: var(--color-text-secondary);">[PDF/HWP/Image] → [PaddleOCR/PrvText] → [MD 정규화] → [청킹] → [PostgreSQL]</p>
+                            <p style="color: var(--color-text-secondary);">[PDF/HWP/Image] → [PaddleOCR/PrvText] → [MD
+                                정규화] → [청킹] → [PostgreSQL]</p>
                         </div>
                     </div>
                     <div class="info-card mt-2"
                         style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--color-success);">
                         <div style="font-weight: 600; margin-bottom: 8px; color: var(--color-success);">✅ 구현 완료</div>
-                        <ul style="list-style: none; padding: 0; color: var(--color-text-secondary); font-size: 0.9rem;">
+                        <ul
+                            style="list-style: none; padding: 0; color: var(--color-text-secondary); font-size: 0.9rem;">
                             <li>• PaddleOCR 마이크로서비스 (CUDA 11.8, ~5GB 이미지)</li>
                             <li>• HWP PrvText 추출 100% 성공률</li>
                             <li>• PyMuPDF PDF 품질 업그레이드</li>
@@ -524,7 +540,7 @@
                 transition: all 0.3s ease;
                 gap: 16px;
             " onmouseover="this.style.borderColor='rgba(6,182,212,0.5)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 20px rgba(6,182,212,0.15)';"
-               onmouseout="this.style.borderColor='rgba(6,182,212,0.25)'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                onmouseout="this.style.borderColor='rgba(6,182,212,0.25)'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <span style="
                         width: 42px; height: 42px; min-width: 42px;
@@ -542,7 +558,8 @@
                         </div>
                     </div>
                 </div>
-                <svg width="20" height="20" fill="none" stroke="var(--color-accent-primary)" viewBox="0 0 24 24" style="min-width: 20px;">
+                <svg width="20" height="20" fill="none" stroke="var(--color-accent-primary)" viewBox="0 0 24 24"
+                    style="min-width: 20px;">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </a>
@@ -658,23 +675,26 @@
                         </tr>
                         <tr>
                             <td>LLM</td>
-                            <td><span style="color: var(--color-success); font-weight: bold;">Ollama 0.14.2 (qwen2.5:3b Q4_K_M)</span></td>
+                            <td><span style="color: var(--color-success); font-weight: bold;">Ollama 0.14.2 (qwen2.5:3b
+                                    Q4_K_M)</span></td>
                             <td><span style="color: var(--color-success);">✓ 완료</span></td>
                             <td>Ollama + vLLM</td>
                             <td>분산 추론 클러스터</td>
                         </tr>
                         <tr>
                             <td>임베딩 모델</td>
-                            <td><span style="color: var(--color-success); font-weight: bold;">BAAI/bge-m3 (1024d)</span></td>
+                            <td><span style="color: var(--color-success); font-weight: bold;">BAAI/bge-m3 (1024d)</span>
+                            </td>
                             <td><span style="color: var(--color-success);">✓ 완료</span></td>
                             <td><span style="color: var(--color-success);">✓ BGE-M3 전환 완료</span></td>
                             <td>BGE-M3 (안정 운영)</td>
                         </tr>
                         <tr>
                             <td>검색 기술</td>
-                            <td><span style="color: var(--color-success); font-weight: bold;">하이브리드 검색</span></td>
+                            <td><span style="color: var(--color-success); font-weight: bold;">Hybrid / Rerank /
+                                    HyDE</span></td>
                             <td><span style="color: var(--color-success);">✓ 완료</span></td>
-                            <td>쿼리 확장 + 재순위화</td>
+                            <td>쿼리 확장 + 재순위화 (고도화)</td>
                             <td>GraphRAG + Agentic RAG</td>
                         </tr>
                         <tr>
@@ -688,7 +708,9 @@
                             <td>문서 처리</td>
                             <td>PDF / TXT</td>
                             <td>PDF / TXT</td>
-                            <td><span style="color: var(--color-success); font-weight: bold;">PaddleOCR + HWP ✓</span> · <span style="color: var(--color-warning); font-weight: bold;">Qwen2.5-VL (진행 중)</span></td>
+                            <td><span style="color: var(--color-success); font-weight: bold;">PaddleOCR + HWP ✓</span> ·
+                                <span style="color: var(--color-warning); font-weight: bold;">Qwen2.5-VL (진행 중)</span>
+                            </td>
                             <td>실시간 인덱싱 + 메타데이터 확장</td>
                         </tr>
                         <tr>
@@ -696,7 +718,8 @@
                             <td>미적용</td>
                             <td>미적용</td>
                             <td>요구사항 / 스키마 설계</td>
-                            <td><span style="color: var(--color-info); font-weight: bold;">LLM Text-to-SQL (Phase 5)</span> → 차트 자동화</td>
+                            <td><span style="color: var(--color-info); font-weight: bold;">LLM Text-to-SQL (Phase
+                                    5)</span> → 차트 자동화</td>
                         </tr>
                         <tr>
                             <td>사용자 경험</td>
@@ -783,21 +806,24 @@
                             <td>Phase 2</td>
                             <td><span class="badge success">완료됨</span></td>
                             <td>a 개발자, c 개발자</td>
-                            <td><del>pgvector + tsvector 하이브리드 검색 구현 → 가중치 튜닝</del></td>
+                            <td><del>Hybrid(Vector+Keyword) · Rerank · HyDE 구현 및 튜닝 완료</del></td>
                             <td>완료</td>
                         </tr>
                         <tr>
                             <td>Phase 3</td>
                             <td><span class="badge success">완료됨</span></td>
                             <td>c 개발자, a 개발자</td>
-                            <td><del>SSE 스트리밍 API</del> · <del>프롬프트 표준화</del> · <del>응답속도 8/10단계</del> · <del>임베딩 BGE-M3 전환</del> · <del>고성능 모델 탑재</del></td>
+                            <td><del>SSE 스트리밍 API</del> · <del>프롬프트 표준화</del> · <del>응답속도 8/10단계</del> · <del>임베딩 BGE-M3
+                                    전환</del> · <del>고성능 모델 탑재</del></td>
                             <td>완료</td>
                         </tr>
                         <tr>
                             <td>Phase 4</td>
-                            <td><span class="badge" style="background: var(--color-warning); color: white;">진행 중</span></td>
+                            <td><span class="badge" style="background: var(--color-warning); color: white;">진행 중</span>
+                            </td>
                             <td>a 개발자, b 개발자</td>
-                            <td><del>PaddleOCR 마이크로서비스</del> · <del>HWP 지원</del> · <del>MD 정규화</del> → BGE-M3 전환 · Qwen2.5-VL · 메타데이터 확장</td>
+                            <td><del>PaddleOCR 마이크로서비스</del> · <del>HWP 지원</del> · <del>MD 정규화</del> → BGE-M3 전환 ·
+                                Qwen2.5-VL · 메타데이터 확장</td>
                             <td>진행 중</td>
                         </tr>
                         <tr>
