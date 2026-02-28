@@ -163,13 +163,13 @@ function App() {
             theme={{
                 algorithm: antd.theme.defaultAlgorithm,
                 token: {
-                    colorPrimary: "#0C66E4",
-                    colorSuccess: "#15803D",
-                    colorWarning: "#C2410C",
-                    colorInfo: "#0EA5E9",
-                    colorBgBase: "#F4F8FD",
-                    colorTextBase: "#0B1220",
-                    borderRadius: 14,
+                    colorPrimary: "#42B8FF",
+                    colorSuccess: "#2EC4A6",
+                    colorWarning: "#F59E0B",
+                    colorInfo: "#60A5FA",
+                    colorBgBase: "#091829",
+                    colorTextBase: "#E7F2FF",
+                    borderRadius: 16,
                     fontFamily: "\"Noto Sans KR\", \"Segoe UI\", sans-serif"
                 }
             }}
@@ -220,7 +220,7 @@ function App() {
                                 <Col xs={24} lg={14}>
                                     <div className="reveal delay-1">
                                         <Tag color="gold" className="hero-kicker">
-                                            React + Ant Design 표준 UI
+                                            Enterprise Glass UI
                                         </Tag>
                                         <Title className="hero-title">
                                             전문적이고 세련된
@@ -279,16 +279,16 @@ function App() {
                                 id="overview"
                                 eyebrow="Overview"
                                 title="프로젝트 개요"
-                                description="본 페이지는 React 기반으로 전환되어, 관리·확장·재사용이 가능한 구조로 재정비되었습니다."
+                                description="핵심 제안 내용을 한 화면에서 빠르게 파악하고 의사결정을 진행할 수 있도록 구성했습니다."
                             />
                             <Card className="overview-card reveal delay-2" bordered={false}>
                                 <Paragraph>
-                                    기존 정적 페이지 중심 구조를 Ant Design 표준 컴포넌트 체계로 변환했습니다. 그 결과,
-                                    화면 일관성, 유지보수 생산성, 반응형 품질이 동시에 향상됩니다.
+                                    기능 요약, 실행 로드맵, 상세 문서 링크를 카드형 레이아웃으로 정리해 정보 탐색 단계를
+                                    줄였습니다.
                                 </Paragraph>
                                 <Paragraph style={{ marginBottom: 0 }}>
-                                    또한 핵심 제안 문서를 카드형 네비게이션으로 연결해, 경영진/실무진이 필요한 정보를 즉시
-                                    확인할 수 있도록 UX를 개선했습니다.
+                                    경영진과 실무진이 동일한 화면에서 우선순위를 확인하고 바로 다음 액션으로 연결할 수
+                                    있도록 UX 흐름을 단순화했습니다.
                                 </Paragraph>
                             </Card>
                         </div>
@@ -429,7 +429,7 @@ function App() {
 
                 <Footer className="site-footer">
                     <div className="container footer-inner">
-                        <Text>RAG Enterprise UI Standardized with React + Ant Design</Text>
+                        <Text>RAG Enterprise Glass Interface</Text>
                         <Text type="secondary">Last updated: 2026-02-28</Text>
                     </div>
                 </Footer>
