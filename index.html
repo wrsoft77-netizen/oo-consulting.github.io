@@ -841,6 +841,9 @@
         </div>
     </footer>
 
+    <!-- React Bridge Root (Step 1: content-preserving integration) -->
+    <div id="react-bridge-root" hidden aria-hidden="true"></div>
+
     <!-- Scripts -->
     <script>
         // Navbar scroll effect
@@ -908,6 +911,11 @@
 
     <!-- AI Pattern Background Script -->
     <script src="bg-ai-pattern.js?v=20260214"></script>
+
+    <!-- React Bridge (Step 1) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="react-bridge.js?v=20260228"></script>
 </body>
 
 </html>
