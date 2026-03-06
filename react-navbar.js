@@ -30,6 +30,17 @@
                     </div>
                 </li>
                 <li class="nav-item">
+                    <a href="proposal2.html" class="nav-link dropdown-trigger">제안서2</a>
+                    <div class="dropdown-menu">
+                        <a href="proposal2.html#overview" class="dropdown-link">개요 및 목적</a>
+                        <a href="proposal2.html#tech" class="dropdown-link">기술 해설</a>
+                        <a href="proposal2.html#principles" class="dropdown-link">명령어 생성 원리</a>
+                        <a href="proposal2.html#security" class="dropdown-link">안전 설계 (3중 방어)</a>
+                        <a href="proposal2.html#commands" class="dropdown-link">허용 명령어 분석</a>
+                        <a href="proposal2.html#advanced" class="dropdown-link">고급 기능 & 기대 효과</a>
+                    </div>
+                </li>
+                <li class="nav-item">
                     <a href="architecture.html" class="nav-link dropdown-trigger">아키텍처</a>
                     <div class="dropdown-menu">
                         <a href="architecture.html#features" class="dropdown-link">핵심 기능</a>
